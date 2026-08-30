@@ -1,0 +1,1354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#F7F7F4">
+  <title>Corral Cost Estimator — RanchAssist</title>
+  <style>
+    :root{
+      --ra-black:#0A0A09;--ra-white:#FFFFFF;--ra-canvas:#F7F7F4;--ra-surface:#FFFFFF;--ra-soft:#F1F1ED;
+      --ra-text:#171715;--ra-muted:#666660;--ra-tertiary:#81817A;--ra-border:#DEDED8;--ra-border-strong:#C5C5BD;
+      --ra-green:#4C6752;--ra-green-soft:#E7EEE8;--ra-warning:#A16C32;--ra-warning-soft:#F4ECE1;
+      --ra-danger:#B44845;--ra-danger-soft:#F5E6E5;--ra-info:#536C80;
+      --radius-sm:6px;--radius-md:8px;--radius-lg:12px;--shadow:0 1px 2px rgba(10,10,9,.04),0 8px 24px rgba(10,10,9,.06);
+      --font:"Geist","Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box}
+    [hidden]{display:none!important}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--ra-canvas);color:var(--ra-text);font-family:var(--font);font-size:15px;line-height:1.45}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+    :focus-visible{outline:2px solid var(--ra-black);outline-offset:2px}
+
+    .topbar{height:62px;background:rgba(247,247,244,.96);border-bottom:1px solid var(--ra-border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:60;backdrop-filter:blur(10px)}
+    .brandline{display:flex;align-items:center;gap:10px;min-width:0}.brand{font-weight:780;letter-spacing:.085em;font-size:15px;white-space:nowrap}.slash{color:var(--ra-tertiary)}.tool-label{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .top-actions{display:flex;align-items:center;gap:8px}.top-actions>button,.menu>summary{height:40px;border:1px solid var(--ra-border-strong);background:var(--ra-white);border-radius:7px;padding:0 13px;display:flex;align-items:center;gap:7px;font-weight:600;list-style:none;user-select:none}
+    .menu{position:relative}.menu>summary::-webkit-details-marker{display:none}.menu[open]>summary{border-color:var(--ra-black)}.menu-pop{position:absolute;right:0;top:46px;min-width:205px;background:var(--ra-white);border:1px solid var(--ra-border-strong);border-radius:10px;box-shadow:var(--shadow);padding:6px;z-index:70}.menu-pop button{display:flex;width:100%;height:40px;border:0;background:transparent;border-radius:6px;align-items:center;text-align:left;padding:0 10px;gap:9px}.menu-pop button:hover{background:var(--ra-soft)}.menu-pop .danger{color:var(--ra-danger)}
+    .icon{width:18px;height:18px;display:inline-grid;place-items:center;font-size:17px;line-height:1}
+
+    .page{max-width:1440px;margin:0 auto;padding:32px 32px 80px}
+    .intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;margin-bottom:22px}.eyebrow{font-size:12px;font-weight:700;letter-spacing:.09em;color:var(--ra-muted);text-transform:uppercase}.intro h1{font-size:38px;line-height:1.05;letter-spacing:-.035em;margin:8px 0 10px}.intro p{margin:0;color:var(--ra-muted);font-size:16px;max-width:760px}.project-name-wrap{min-width:280px}.label{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:650;margin-bottom:7px}.micro{font-size:11px;letter-spacing:.06em;color:var(--ra-tertiary);text-transform:uppercase;font-weight:700}.input,.select,.textarea{width:100%;border:1px solid #CFCFC8;background:var(--ra-white);border-radius:7px;min-height:44px;padding:9px 11px}.input:focus,.select:focus,.textarea:focus{border-color:var(--ra-black);box-shadow:0 0 0 3px rgba(10,10,9,.08);outline:0}.textarea{min-height:94px;resize:vertical}
+    .session-note{background:var(--ra-white);border:1px solid var(--ra-border);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:18px;color:var(--ra-muted);font-size:13px}.session-note strong{color:var(--ra-text)}
+
+    .mode-tabs{display:flex;gap:6px;border:1px solid var(--ra-border);background:var(--ra-white);padding:5px;border-radius:10px;width:max-content;margin-bottom:16px}.mode-btn{height:38px;border:0;background:transparent;border-radius:6px;padding:0 15px;font-weight:650;color:var(--ra-muted)}.mode-btn.active{background:var(--ra-black);color:var(--ra-white)}
+    .app-grid{display:grid;grid-template-columns:minmax(0,1.64fr) minmax(380px,.86fr);gap:18px;align-items:start}
+    .workspace,.side{min-width:0}.card{background:var(--ra-white);border:1px solid var(--ra-border);border-radius:12px}.card-head{padding:18px 20px 14px;border-bottom:1px solid var(--ra-border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.card-title{font-size:18px;font-weight:700;margin:0}.card-sub{font-size:13px;color:var(--ra-muted);margin-top:4px}.card-body{padding:20px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:7px;align-items:center}.tool-btn{height:38px;border:1px solid var(--ra-border-strong);background:var(--ra-white);border-radius:7px;padding:0 11px;font-weight:620}.tool-btn.active{background:var(--ra-black);color:#fff;border-color:var(--ra-black)}.tool-btn:disabled{opacity:.45;cursor:not-allowed}.btn{min-height:42px;border:1px solid var(--ra-border-strong);background:var(--ra-white);border-radius:7px;padding:9px 14px;font-weight:650}.btn:hover{border-color:var(--ra-black)}.btn.primary{background:var(--ra-black);color:#fff;border-color:var(--ra-black)}.btn.primary:hover{background:#242422}.btn.tertiary{border:0;background:transparent;padding-left:0;padding-right:0}.btn.danger{color:var(--ra-danger);border-color:#d8aaa8}.btn.small{min-height:34px;padding:6px 9px;font-size:13px}.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+
+    .quick-preview{min-height:420px;background:var(--ra-soft);position:relative;overflow:hidden}.quick-preview svg{display:block;width:100%;height:420px}.preview-empty{height:420px;display:grid;place-items:center;text-align:center;padding:30px;color:var(--ra-muted)}
+    .plan-shell{position:relative;background:#fbfbf9;overflow:hidden}.plan-controls{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--ra-border);background:var(--ra-white)}.plan-controls-left,.plan-controls-right{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.mini-field{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ra-muted)}.mini-field input,.mini-field select{height:36px;border:1px solid var(--ra-border-strong);border-radius:6px;background:#fff;padding:0 8px;width:82px}.mini-field select{width:auto;max-width:170px}
+    #planSvg{width:100%;height:min(65vh,640px);min-height:440px;display:block;touch-action:none;background:#fbfbf9;cursor:crosshair}.plan-grid-line{stroke:#e9e9e4;stroke-width:1}.plan-grid-major{stroke:#dcdcd5;stroke-width:1}.plan-pen{fill:rgba(76,103,82,.08);stroke:#171715;stroke-width:2}.plan-line{stroke:#171715;stroke-width:3;stroke-linecap:round}.plan-selected{stroke:#4C6752!important;stroke-width:4!important}.plan-label{font-family:var(--font);font-size:14px;font-weight:650;fill:#171715;pointer-events:none}.plan-measure{font-family:var(--font);font-size:12px;font-weight:650;fill:white;pointer-events:none}.plan-measure-bg{fill:#171715;rx:4;pointer-events:none}.plan-gate{fill:white;stroke:#171715;stroke-width:2}.plan-equipment{fill:#171715}.plan-existing{fill:#efefe9;stroke:#81817A;stroke-width:1.5;stroke-dasharray:5 4}.selection-panel{border-top:1px solid var(--ra-border);padding:12px 14px;background:var(--ra-white)}.selection-panel[hidden]{display:none}.selection-grid{display:grid;grid-template-columns:1.35fr 1fr .8fr .8fr .8fr .8fr auto;gap:8px;align-items:end}.selection-panel label{font-size:12px;color:var(--ra-muted)}.selection-panel input,.selection-panel select{height:38px;margin-top:5px;border:1px solid var(--ra-border-strong);border-radius:6px;padding:0 8px;width:100%}
+    .workspace-metrics{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--ra-border)}.workspace-metric{padding:13px 15px;border-right:1px solid var(--ra-border)}.workspace-metric:last-child{border-right:0}.workspace-metric .k{font-size:11px;color:var(--ra-muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}.workspace-metric .v{font-size:21px;font-weight:720;margin-top:3px;font-variant-numeric:tabular-nums}
+
+    .side{display:flex;flex-direction:column;gap:14px}.results-card{border-color:#c8d3ca}.results-top{padding:19px 20px;background:linear-gradient(0deg,var(--ra-green-soft),var(--ra-green-soft));border-radius:11px 11px 0 0}.results-label{font-size:11px;letter-spacing:.075em;text-transform:uppercase;font-weight:750;color:#445b49}.results-total{font-size:42px;line-height:1;font-weight:760;letter-spacing:-.035em;margin:5px 0 7px;font-variant-numeric:tabular-nums}.results-context{font-size:13px;color:#445b49}.cost-grid{display:grid;grid-template-columns:1fr auto;gap:8px 14px;padding:15px 20px;font-size:14px}.cost-grid .num{text-align:right;font-variant-numeric:tabular-nums}.cost-grid .total-row{font-weight:750;border-top:1px solid var(--ra-border);padding-top:10px;margin-top:2px}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:0 20px 18px}.mini-metric{border:1px solid var(--ra-border);border-radius:8px;padding:11px}.mini-metric .k{font-size:10px;color:var(--ra-muted);letter-spacing:.06em;text-transform:uppercase;font-weight:700}.mini-metric .v{font-size:20px;font-weight:720;margin-top:2px;font-variant-numeric:tabular-nums}
+
+    .accordion{background:#fff;border:1px solid var(--ra-border);border-radius:12px;overflow:hidden}.accordion>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;font-weight:700;cursor:pointer}.accordion>summary::-webkit-details-marker{display:none}.accordion[open]>summary{border-bottom:1px solid var(--ra-border)}.accordion-body{padding:17px 18px}.section-help{font-size:12px;color:var(--ra-muted);margin:0 0 14px}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.field label{display:block;font-size:13px;font-weight:640;margin-bottom:6px}.field .helper{font-size:11px;color:var(--ra-muted);margin-top:5px}.unit-input{display:flex}.unit-input .input{border-radius:7px 0 0 7px}.unit{display:flex;align-items:center;justify-content:center;min-width:48px;border:1px solid #CFCFC8;border-left:0;background:var(--ra-soft);border-radius:0 7px 7px 0;padding:0 8px;font-size:12px;color:var(--ra-muted)}
+    .assumption{display:inline-flex;padding:2px 5px;border-radius:4px;background:var(--ra-warning-soft);color:#7b5125;font-size:9px;letter-spacing:.05em;font-weight:750;text-transform:uppercase;margin-left:5px;vertical-align:1px}
+    .divider{border:0;border-top:1px solid var(--ra-border);margin:16px 0}.subhead{font-size:14px;font-weight:720;margin:0 0 10px}
+
+    .rows{display:flex;flex-direction:column;gap:8px}.row-card{border:1px solid var(--ra-border);border-radius:8px;padding:11px;background:#fff}.row-grid{display:grid;grid-template-columns:1.25fr .9fr .7fr .7fr 1fr auto;gap:7px;align-items:end}.row-grid.gates{grid-template-columns:1.2fr .65fr .55fr .85fr .8fr .8fr auto}.row-grid.equip{grid-template-columns:1.4fr .55fr .9fr auto}.row-grid .mini-label{font-size:10px;color:var(--ra-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:4px}.row-grid input,.row-grid select{height:37px;border:1px solid var(--ra-border-strong);border-radius:6px;padding:0 7px;width:100%;background:#fff}.remove{width:37px;height:37px;border:1px solid #e0b9b7;color:var(--ra-danger);background:#fff;border-radius:6px;font-size:18px}.add-row{margin-top:9px}
+
+    .system-tabs{display:flex;gap:5px;overflow:auto;padding-bottom:4px}.system-tab{height:34px;white-space:nowrap;border:1px solid var(--ra-border-strong);background:white;border-radius:6px;padding:0 9px;font-size:12px;font-weight:650}.system-tab.active{background:var(--ra-black);color:white;border-color:var(--ra-black)}.system-config{margin-top:13px;padding:13px;background:var(--ra-soft);border-radius:8px}.system-config .field-grid{gap:10px}
+
+    .bom-card{margin-top:18px}.table-wrap{overflow:auto}.bom{width:100%;border-collapse:collapse;font-size:13px}.bom th{background:var(--ra-soft);padding:10px 11px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;text-align:left;white-space:nowrap}.bom td{padding:10px 11px;border-bottom:1px solid var(--ra-border);vertical-align:top}.bom td.num,.bom th.num{text-align:right;font-variant-numeric:tabular-nums}.bom tr:last-child td{border-bottom:0}.empty-row{text-align:center!important;color:var(--ra-muted);padding:28px!important}
+    .formula-list{display:grid;gap:12px}.formula{border-left:3px solid var(--ra-border-strong);padding-left:11px}.formula strong{display:block;font-size:13px}.formula code{display:block;margin-top:4px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ra-muted);white-space:normal}
+
+    .status{font-size:12px;color:var(--ra-muted)}.status.unsaved{color:var(--ra-warning)}.status.saved{color:var(--ra-green)}
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ra-black);color:#fff;padding:11px 14px;border-radius:8px;box-shadow:var(--shadow);z-index:100;opacity:0;pointer-events:none;transition:180ms ease;max-width:min(92vw,520px);text-align:center}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    dialog{border:1px solid var(--ra-border-strong);border-radius:12px;padding:0;box-shadow:0 18px 55px rgba(0,0,0,.18);max-width:520px;width:calc(100% - 28px)}dialog::backdrop{background:rgba(10,10,9,.35)}.dialog-head{padding:18px 20px;border-bottom:1px solid var(--ra-border);display:flex;justify-content:space-between;align-items:center}.dialog-head h2{font-size:19px;margin:0}.dialog-body{padding:20px}.dialog-actions{padding:14px 20px;border-top:1px solid var(--ra-border);display:flex;justify-content:flex-end;gap:8px}.close-x{width:38px;height:38px;border:0;background:transparent;border-radius:6px;font-size:20px}
+    .mobile-result-bar{display:none}
+    .desktop-hide{display:none}
+
+    @media(max-width:1023px){
+      .topbar{padding:0 18px}.page{padding:24px 20px 90px}.intro{grid-template-columns:1fr}.project-name-wrap{min-width:0;max-width:520px}.app-grid{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr;align-items:start}.results-card{grid-column:1/-1}.workspace{order:0}.bom-card{margin-top:14px}.workspace-metrics{grid-template-columns:repeat(4,1fr)}
+    }
+    @media(max-width:767px){
+      body{padding-bottom:68px}.topbar{height:56px;padding:0 14px}.brand{font-size:13px}.slash,.tool-label{display:none}.top-actions{gap:5px}.top-actions>.desktop-action{display:none}.menu>summary{height:42px;padding:0 10px}.menu>summary .summary-text{display:none}.menu-pop{position:fixed;left:12px;right:12px;top:62px;min-width:0}.page{padding:20px 14px 38px}.intro{margin-bottom:16px}.intro h1{font-size:31px}.intro p{font-size:15px}.mode-tabs{width:100%}.mode-btn{flex:1;padding:0 8px}.app-grid{gap:12px}.card-head{padding:15px}.card-body{padding:15px}.plan-controls{align-items:flex-start;flex-direction:column}.plan-controls-left,.plan-controls-right{width:100%}.plan-controls .tool-btn{flex:1;min-width:92px}.mini-field{flex:1}.mini-field input,.mini-field select{flex:1;min-width:0}.quick-preview,.quick-preview svg,.preview-empty{height:360px;min-height:360px}#planSvg{height:56vh;min-height:390px}.workspace-metrics{grid-template-columns:repeat(2,1fr)}.workspace-metric:nth-child(2){border-right:0}.workspace-metric:nth-child(-n+2){border-bottom:1px solid var(--ra-border)}.selection-grid{grid-template-columns:1fr 1fr}.selection-grid .wide{grid-column:1/-1}.side{display:flex}.results-total{font-size:38px}.field-grid,.field-grid.three{grid-template-columns:1fr}.row-card{padding:10px}.row-grid,.row-grid.gates,.row-grid.equip{grid-template-columns:1fr 1fr}.row-grid .remove-wrap{grid-column:1/-1}.remove{width:100%}.system-tabs{margin-right:-15px;padding-right:15px}.bom th:nth-child(2),.bom td:nth-child(2){display:none}.mobile-result-bar{position:fixed;left:0;right:0;bottom:0;height:68px;background:rgba(255,255,255,.97);border-top:1px solid var(--ra-border-strong);z-index:55;display:flex;align-items:center;justify-content:space-between;padding:8px 14px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 18px rgba(10,10,9,.05)}.mobile-total .k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ra-muted);font-weight:700}.mobile-total .v{font-size:22px;font-weight:750;line-height:1.05}.desktop-hide{display:block}.toast{bottom:82px}
+    }
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+    @media print{
+      body{background:#fff;padding:0}.topbar,.mode-tabs,.session-note,.toolbar,.plan-controls,.selection-panel,.side details,.mobile-result-bar,.no-print,.btnrow{display:none!important}.page{max-width:none;padding:0}.intro{display:block;margin-bottom:18px}.project-name-wrap{display:none}.app-grid{display:block}.workspace,.results-card,.bom-card{break-inside:avoid}.quick-preview,#planSvg{height:360px!important;min-height:360px!important}.side{display:block}.results-card{margin:14px 0}.bom-card{border:1px solid #bbb}.card{box-shadow:none}.bom th,.bom td{font-size:10px;padding:6px}.intro h1{font-size:28px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brandline" aria-label="RanchAssist Corral Cost Estimator">
+      <span class="brand">RANCHASSIST™</span><span class="slash">/</span><span class="tool-label">Corral Cost Estimator</span>
+    </div>
+    <div class="top-actions">
+      <span id="saveStatus" class="status desktop-action">Unsaved</span>
+      <details class="menu" id="projectMenu">
+        <summary aria-label="Project menu"><span class="icon">▱</span><span class="summary-text">Project</span></summary>
+        <div class="menu-pop">
+          <button type="button" data-action="open-project">↥ Open Project</button>
+          <button type="button" data-action="save-project">↓ Save Project</button>
+          <button type="button" data-action="duplicate-project">⧉ Duplicate Project</button>
+          <button type="button" class="danger" data-action="clear-session">× Clear Session</button>
+        </div>
+      </details>
+      <details class="menu" id="exportMenu">
+        <summary aria-label="Export menu"><span class="icon">⇩</span><span class="summary-text">Export</span></summary>
+        <div class="menu-pop">
+          <button type="button" data-action="export-csv">▦ CSV bill of materials</button>
+          <button type="button" data-action="export-png">▧ PNG plan</button>
+          <button type="button" data-action="print">▤ Print / PDF</button>
+        </div>
+      </details>
+      <details class="menu" id="shareMenu">
+        <summary aria-label="Share menu"><span class="icon">↗</span><span class="summary-text">Share</span></summary>
+        <div class="menu-pop">
+          <button type="button" data-action="copy-summary">⎘ Copy Summary</button>
+          <button type="button" data-action="email">✉ Email Estimate</button>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="intro">
+      <div>
+        <div class="eyebrow">Infrastructure</div>
+        <h1>Corral Cost Estimator</h1>
+        <p>Plan pens, fence systems, posts, gates, concrete, working equipment, labor, and a practical total build-cost estimate.</p>
+      </div>
+      <div class="project-name-wrap">
+        <label class="label" for="projectName"><span>Project name</span><span class="micro">Optional</span></label>
+        <input class="input" id="projectName" maxlength="120" placeholder="Shop Corral Estimate">
+      </div>
+    </section>
+
+    <div class="session-note" role="note">
+      <span aria-hidden="true">ⓘ</span>
+      <div><strong>Session only.</strong> RanchAssist does not permanently store this project. Save a RanchAssist <code>.ra</code> project file to continue your work later, or export your results before leaving.</div>
+    </div>
+
+    <nav class="mode-tabs" aria-label="Estimator mode">
+      <button class="mode-btn active" id="quickModeBtn" type="button" data-mode="quick">Quick Dimensions</button>
+      <button class="mode-btn" id="planModeBtn" type="button" data-mode="plan">Plan Mode</button>
+    </nav>
+
+    <div class="app-grid">
+      <section class="workspace" aria-label="Corral workspace">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title" id="workspaceTitle">Facility schematic</h2>
+              <div class="card-sub" id="workspaceSub">Add pens and dimensions; RanchAssist will build a proportional planning schematic and calculate perimeter footage.</div>
+            </div>
+            <div class="toolbar" id="quickToolbar">
+              <button class="tool-btn" type="button" data-action="add-pen">+ Add Pen</button>
+              <button class="tool-btn" type="button" data-action="add-gate">+ Add Gate</button>
+            </div>
+          </div>
+
+          <div id="quickWorkspace">
+            <div class="quick-preview" id="quickPreview" aria-label="Quick dimensions facility preview"></div>
+          </div>
+
+          <div id="planWorkspace" hidden>
+            <div class="plan-controls no-print">
+              <div class="plan-controls-left" role="toolbar" aria-label="Plan drawing tools">
+                <button class="tool-btn active" type="button" data-plan-tool="select">Select</button>
+                <button class="tool-btn" type="button" data-plan-tool="pen">Draw pen</button>
+                <button class="tool-btn" type="button" data-plan-tool="line">Fence line</button>
+                <button class="tool-btn" type="button" data-plan-tool="gate">Place gate</button>
+                <button class="tool-btn" type="button" data-plan-tool="equipment">Equipment</button>
+                <button class="tool-btn" type="button" data-plan-tool="existing">Existing</button>
+              </div>
+              <div class="plan-controls-right">
+                <label class="mini-field">Grid <input id="gridFt" type="number" min="1" step="1" inputmode="decimal"><span>ft</span></label>
+                <label class="mini-field">System <select id="drawSystem"></select></label>
+                <label class="mini-field">Equipment <select id="drawEquipment"></select></label>
+                <button class="tool-btn" type="button" id="undoPlanBtn" data-action="undo-plan">Undo</button>
+                <button class="tool-btn" type="button" id="redoPlanBtn" data-action="redo-plan">Redo</button>
+              </div>
+            </div>
+            <div class="plan-shell">
+              <svg id="planSvg" viewBox="0 0 1000 640" role="img" aria-label="Interactive corral plan grid"></svg>
+            </div>
+            <div class="selection-panel" id="selectionPanel" hidden>
+              <div class="selection-grid">
+                <label class="wide">Selected item<input id="selName" type="text" maxlength="80"></label>
+                <label id="selSystemLabel">Construction<select id="selSystem"></select></label>
+                <label id="selLengthLabel">Length (ft)<input id="selLength" type="number" min="0" step="0.5" inputmode="decimal"></label>
+                <label id="selWidthLabel">Width (ft)<input id="selWidth" type="number" min="0" step="0.5" inputmode="decimal"></label>
+                <label id="selCostLabel">Unit cost<input id="selCost" type="number" min="0" step="0.01" inputmode="decimal"></label>
+                <label id="selHardwareLabel">Hardware<input id="selHardware" type="number" min="0" step="0.01" inputmode="decimal"></label>
+                <div><button class="btn danger small" type="button" data-action="delete-selected">Delete</button></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="workspace-metrics">
+            <div class="workspace-metric"><div class="k">Gross fence</div><div class="v" id="metricGrossLf">0 ft</div></div>
+            <div class="workspace-metric"><div class="k">Gate openings</div><div class="v" id="metricGateLf">0 ft</div></div>
+            <div class="workspace-metric"><div class="k">Posts</div><div class="v" id="metricPosts">0</div></div>
+            <div class="workspace-metric"><div class="k">Concrete</div><div class="v" id="metricConcrete">0 yd³</div></div>
+          </div>
+        </div>
+
+        <div class="card bom-card" id="bomSection">
+          <div class="card-head">
+            <div><h2 class="card-title">Bill of materials</h2><div class="card-sub">Live planning quantities and editable cost assumptions.</div></div>
+            <button class="btn small no-print" type="button" data-action="export-csv">Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table class="bom">
+              <thead><tr><th>Item</th><th>Description</th><th class="num">Qty</th><th>Unit</th><th class="num">Unit cost</th><th class="num">Extended</th></tr></thead>
+              <tbody id="bomBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side" aria-label="Estimator controls and results">
+        <section class="card results-card" id="resultsCard">
+          <div class="results-top">
+            <div class="results-label">Estimated project cost</div>
+            <div class="results-total" id="totalCost">$0</div>
+            <div class="results-context"><span id="costPerFoot">$0.00 / installed ft</span> · <span id="costPerPen">$0 / pen</span></div>
+          </div>
+          <div class="cost-grid">
+            <div>Construction materials</div><div class="num" id="constructionSubtotal">$0</div>
+            <div>Gates + hardware</div><div class="num" id="gateSubtotal">$0</div>
+            <div>Concrete</div><div class="num" id="concreteSubtotal">$0</div>
+            <div>Working equipment</div><div class="num" id="workingSubtotal">$0</div>
+            <div>Labor</div><div class="num" id="laborSubtotal">$0</div>
+            <div>Rental + delivery</div><div class="num" id="equipmentSubtotal">$0</div>
+            <div>Tax</div><div class="num" id="taxSubtotal">$0</div>
+            <div>Contingency</div><div class="num" id="contingencySubtotal">$0</div>
+            <div class="total-row">Total</div><div class="num total-row" id="totalCostSmall">$0</div>
+          </div>
+          <div class="metric-grid">
+            <div class="mini-metric"><div class="k">Installed fence</div><div class="v" id="installedLf">0 ft</div></div>
+            <div class="mini-metric"><div class="k">Pens</div><div class="v" id="penCount">0</div></div>
+            <div class="mini-metric"><div class="k">Gates</div><div class="v" id="gateCount">0</div></div>
+            <div class="mini-metric"><div class="k">Concrete bags</div><div class="v" id="concreteBags">0</div></div>
+          </div>
+        </section>
+
+        <details class="accordion" open id="facilitySection">
+          <summary><span>1 · Facility</span><span>＋</span></summary>
+          <div class="accordion-body">
+            <p class="section-help" id="facilityHelp">Add each holding, sorting, crowd, trap, alley, or loading area. Dimensions are planning inputs and can be edited at any time.</p>
+            <div id="quickFacilityControls">
+              <div class="rows" id="penRows"></div>
+              <button class="btn small add-row" type="button" data-action="add-pen">+ Add pen / area</button>
+            </div>
+            <div id="planFacilityControls" hidden>
+              <div class="field-grid">
+                <div class="field"><label for="planSharedDeduction">Shared/overlap deduction <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="planSharedDeduction" type="number" min="0" step="1" inputmode="decimal"><span class="unit">ft</span></div><div class="helper">Use only when overlapping plan edges would otherwise be counted twice.</div></div>
+                <div class="field"><label for="snapGrid">Drawing snap</label><select class="select" id="snapGrid"><option value="on">Snap to grid</option><option value="off">Free draw</option></select></div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="accordion" open>
+          <summary><span>2 · Materials</span><span>＋</span></summary>
+          <div class="accordion-body">
+            <p class="section-help">Choose a construction system per pen or line. Unit costs below are editable planning assumptions, not live supplier prices.</p>
+            <div class="system-tabs" id="systemTabs"></div>
+            <div class="system-config" id="systemConfig"></div>
+          </div>
+        </details>
+
+        <details class="accordion" open>
+          <summary><span>3 · Gates + concrete</span><span>＋</span></summary>
+          <div class="accordion-body">
+            <div id="quickGateControls">
+              <div class="rows" id="gateRows"></div>
+              <button class="btn small add-row" type="button" data-action="add-gate">+ Add gate</button>
+              <hr class="divider">
+            </div>
+            <div class="subhead">Post-hole concrete</div>
+            <div class="field-grid">
+              <div class="field"><label for="holeDiameter">Hole diameter <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="holeDiameter" type="number" min="1" step="1" inputmode="decimal"><span class="unit">in</span></div></div>
+              <div class="field"><label for="holeDepth">Hole depth <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="holeDepth" type="number" min="0.5" step="0.25" inputmode="decimal"><span class="unit">ft</span></div></div>
+              <div class="field"><label for="concreteMethod">Purchase method</label><select class="select" id="concreteMethod"><option value="bags">Bagged concrete</option><option value="ready">Ready-mix / bulk</option></select></div>
+              <div class="field"><label for="bagYield">Bag yield <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="bagYield" type="number" min="0.1" step="0.05" inputmode="decimal"><span class="unit">ft³</span></div></div>
+              <div class="field"><label for="bagCost">Bag cost <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="bagCost" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$</span></div></div>
+              <div class="field"><label for="readyCost">Ready-mix cost <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="readyCost" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$/yd³</span></div></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="accordion">
+          <summary><span>4 · Working equipment</span><span>＋</span></summary>
+          <div class="accordion-body">
+            <p class="section-help">Add optional squeeze chutes, headgates, alleys, tubs, scales, loading equipment, catwalks, or custom items. Enter your own current unit costs.</p>
+            <div class="rows" id="equipmentRows"></div>
+            <button class="btn small add-row" type="button" data-action="add-equipment">+ Add equipment item</button>
+          </div>
+        </details>
+
+        <details class="accordion" open>
+          <summary><span>5 · Labor + project costs</span><span>＋</span></summary>
+          <div class="accordion-body">
+            <div class="subhead">Labor</div>
+            <div class="field-grid">
+              <div class="field"><label for="weldingHours">Welding hours</label><div class="unit-input"><input class="input" id="weldingHours" type="number" min="0" step="0.5" inputmode="decimal"><span class="unit">hr</span></div></div>
+              <div class="field"><label for="weldingRate">Welding rate <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="weldingRate" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$/hr</span></div></div>
+              <div class="field"><label for="generalHours">General labor hours</label><div class="unit-input"><input class="input" id="generalHours" type="number" min="0" step="0.5" inputmode="decimal"><span class="unit">hr</span></div></div>
+              <div class="field"><label for="generalRate">General labor rate <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="generalRate" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$/hr</span></div></div>
+              <div class="field"><label for="concreteHours">Concrete labor hours</label><div class="unit-input"><input class="input" id="concreteHours" type="number" min="0" step="0.5" inputmode="decimal"><span class="unit">hr</span></div></div>
+              <div class="field"><label for="concreteRate">Concrete labor rate <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="concreteRate" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$/hr</span></div></div>
+            </div>
+            <hr class="divider">
+            <div class="subhead">Rental, delivery + adjustments</div>
+            <div class="field-grid">
+              <div class="field"><label for="rentalDays">Auger / skid steer days</label><div class="unit-input"><input class="input" id="rentalDays" type="number" min="0" step="0.5" inputmode="decimal"><span class="unit">day</span></div></div>
+              <div class="field"><label for="rentalRate">Rental rate <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="rentalRate" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$/day</span></div></div>
+              <div class="field"><label for="freight">Freight / delivery</label><div class="unit-input"><input class="input" id="freight" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$</span></div></div>
+              <div class="field"><label for="otherEquipment">Other equipment cost</label><div class="unit-input"><input class="input" id="otherEquipment" type="number" min="0" step="0.01" inputmode="decimal"><span class="unit">$</span></div></div>
+              <div class="field"><label for="taxPct">Tax <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="taxPct" type="number" min="0" max="30" step="0.01" inputmode="decimal"><span class="unit">%</span></div></div>
+              <div class="field"><label for="contingencyPct">Contingency <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="contingencyPct" type="number" min="0" max="100" step="0.5" inputmode="decimal"><span class="unit">%</span></div></div>
+              <div class="field"><label for="sharedDeduction">Quick-mode shared fence deduction <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="sharedDeduction" type="number" min="0" step="1" inputmode="decimal"><span class="unit">ft</span></div><div class="helper">Subtract shared boundaries counted by more than one Quick Dimensions pen.</div></div>
+              <div class="field"><label for="materialWastePct">Material waste / overage <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" id="materialWastePct" type="number" min="0" max="100" step="0.5" inputmode="decimal"><span class="unit">%</span></div></div>
+            </div>
+            <hr class="divider">
+            <div class="field"><label for="notes">Project notes <span class="micro">Optional</span></label><textarea class="textarea" id="notes" placeholder="Site conditions, supplier notes, assumptions, sequencing, or other planning details."></textarea></div>
+          </div>
+        </details>
+
+        <details class="accordion">
+          <summary><span>View Calculation Details</span><span>＋</span></summary>
+          <div class="accordion-body"><div class="formula-list" id="formulaList"></div></div>
+        </details>
+
+        <div class="btnrow no-print">
+          <button class="btn primary" type="button" data-action="save-project">Save Project</button>
+          <button class="btn" type="button" data-action="copy-summary">Copy Summary</button>
+          <button class="btn danger" type="button" data-action="clear-session">Clear Session</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="mobile-result-bar">
+    <div class="mobile-total"><div class="k">Estimated total</div><div class="v" id="mobileTotal">$0</div></div>
+    <button class="btn primary" type="button" data-action="jump-results">View Estimate</button>
+  </div>
+
+  <input class="sr-only" id="projectFileInput" type="file" accept=".ra,application/json,application/x-ranchassist-project">
+
+  <dialog id="emailDialog">
+    <div class="dialog-head"><h2>Email estimate</h2><button class="close-x" type="button" data-action="close-email" aria-label="Close">×</button></div>
+    <div class="dialog-body">
+      <div class="field"><label for="emailTo">Recipient email</label><input class="input" id="emailTo" type="email" autocomplete="email" placeholder="name@example.com"></div>
+      <p class="section-help" style="margin-top:12px">RanchAssist will send the current summary and bill of materials through the deployed Apps Script account.</p>
+      <div id="emailError" style="color:var(--ra-danger);font-size:13px" role="alert"></div>
+    </div>
+    <div class="dialog-actions"><button class="btn" type="button" data-action="close-email">Cancel</button><button class="btn primary" type="button" id="sendEmailBtn" data-action="send-email">Send Estimate</button></div>
+  </dialog>
+
+  <dialog id="clearDialog">
+    <div class="dialog-head"><h2>Clear this session?</h2><button class="close-x" type="button" data-action="close-clear" aria-label="Close">×</button></div>
+    <div class="dialog-body"><p>This removes the current unsaved RanchAssist project from this browser session. Saved <code>.ra</code> files on your device will not be affected.</p></div>
+    <div class="dialog-actions"><button class="btn" type="button" data-action="close-clear">Cancel</button><button class="btn danger" type="button" data-action="confirm-clear">Clear Session</button></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    window.RANCHASSIST_CONFIG = <?!= runtimeConfig ?>;
+  </script>
+  <script>
+    (() => {
+      'use strict';
+
+      const TOOL = { id:'corral-cost-estimator', name:'Corral Cost Estimator', version:'1.0.0', formatVersion:'1.0' };
+      const SESSION_KEY = 'ranchassist:corral-cost-estimator:active-session:v1';
+      const GRID_PX = 40;
+      const svgNS = 'http://www.w3.org/2000/svg';
+
+      const SYSTEMS = {
+        pipe: {
+          label:'Continuous steel pipe', short:'Steel pipe',
+          defaults:{postSpacing:8,railCount:5,railCostPerFt:2.75,linePostCost:32,terminalPostCost:58},
+          fields:[
+            ['postSpacing','Post spacing','ft',1],['railCount','Horizontal rails','rows',1],['railCostPerFt','Pipe rail cost','$/ft',0.01],
+            ['linePostCost','Line post cost','$/ea',0.01],['terminalPostCost','Corner/end/gate post','$/ea',0.01]
+          ]
+        },
+        pipeRod: {
+          label:'Pipe + sucker rod', short:'Pipe + rod',
+          defaults:{postSpacing:8,topRailCount:1,topRailCostPerFt:2.75,rodRows:5,rodCostPerFt:0.72,linePostCost:32,terminalPostCost:58},
+          fields:[
+            ['postSpacing','Post spacing','ft',1],['topRailCount','Top pipe rails','rows',1],['topRailCostPerFt','Top rail cost','$/ft',0.01],
+            ['rodRows','Sucker rod rows','rows',1],['rodCostPerFt','Sucker rod cost','$/ft',0.01],['linePostCost','Line post cost','$/ea',0.01],['terminalPostCost','Terminal post cost','$/ea',0.01]
+          ]
+        },
+        panel: {
+          label:'Livestock panels', short:'Panels',
+          defaults:{postSpacing:16,panelLength:16,panelCost:148,linePostCost:30,terminalPostCost:52},
+          fields:[
+            ['postSpacing','Post spacing','ft',1],['panelLength','Panel length','ft',1],['panelCost','Panel cost','$/ea',0.01],
+            ['linePostCost','Line post cost','$/ea',0.01],['terminalPostCost','Terminal post cost','$/ea',0.01]
+          ]
+        },
+        wood: {
+          label:'Wood rails', short:'Wood rail',
+          defaults:{postSpacing:8,railCount:4,railCostPerFt:2.15,linePostCost:24,terminalPostCost:42},
+          fields:[
+            ['postSpacing','Post spacing','ft',1],['railCount','Rail rows','rows',1],['railCostPerFt','Rail cost','$/ft',0.01],
+            ['linePostCost','Line post cost','$/ea',0.01],['terminalPostCost','Terminal post cost','$/ea',0.01]
+          ]
+        },
+        wire: {
+          label:'Wire / low-pressure area', short:'Wire',
+          defaults:{postSpacing:12,strands:5,wireCostPerFt:0.19,linePostCost:7.5,terminalPostCost:34},
+          fields:[
+            ['postSpacing','Post spacing','ft',1],['strands','Wire strands','strands',1],['wireCostPerFt','Wire cost','$/ft',0.001],
+            ['linePostCost','Line post cost','$/ea',0.01],['terminalPostCost','Terminal post cost','$/ea',0.01]
+          ]
+        },
+        custom: {
+          label:'Custom system', short:'Custom',
+          defaults:{postSpacing:10,materialCostPerFt:12,linePostCost:25,terminalPostCost:45},
+          fields:[
+            ['postSpacing','Post spacing','ft',1],['materialCostPerFt','Installed material allowance','$/ft',0.01],
+            ['linePostCost','Line post cost','$/ea',0.01],['terminalPostCost','Terminal post cost','$/ea',0.01]
+          ]
+        }
+      };
+
+      const PEN_TYPES = ['Holding pen','Sorting pen','Crowd pen','Alley','Tub / crowd area','Loading lane','Trap pen','Custom'];
+      const EQUIPMENT_TYPES = ['Squeeze chute','Headgate','Alley section','Crowding tub','Scale','Loading chute / ramp','Catwalk','Custom'];
+
+      const $ = (sel, root=document) => root.querySelector(sel);
+      const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+      const num = (v, fallback=0) => { const n = Number(v); return Number.isFinite(n) ? n : fallback; };
+      const nonneg = v => Math.max(0, num(v));
+      const clamp = (v,min,max) => Math.min(max,Math.max(min,num(v)));
+      const round = (v,d=2) => { const p=10**d; return Math.round((num(v)+Number.EPSILON)*p)/p; };
+      const money = v => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(num(v));
+      const money2 = v => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(num(v));
+      const qtyFmt = (v,d=0) => new Intl.NumberFormat('en-US',{maximumFractionDigits:d}).format(num(v));
+      const escapeHtml = str => String(str ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+      const uid = () => {
+        if(window.crypto && typeof window.crypto.randomUUID==='function') return window.crypto.randomUUID();
+        const rnd=()=>Math.floor(Math.random()*16);
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=rnd(),v=c==='x'?r:(r&0x3)|0x8;return v.toString(16);});
+      };
+      const nowIso = () => new Date().toISOString();
+      const clone = obj => JSON.parse(JSON.stringify(obj));
+      const sanitizeFilename = value => String(value || 'Corral_Cost_Estimate').trim().replace(/[\\/:*?"<>|\x00-\x1F]/g,'').replace(/\s+/g,'_').slice(0,100) || 'Corral_Cost_Estimate';
+
+      function baseSystemConfigs(){
+        const out={};
+        Object.keys(SYSTEMS).forEach(k => out[k]=clone(SYSTEMS[k].defaults));
+        return out;
+      }
+
+      function makeDefaultState(){
+        const ts=nowIso();
+        return {
+          project:{id:uid(),name:'Shop Corral Estimate',createdAt:ts,updatedAt:ts},
+          mode:'quick',
+          quickPens:[
+            {id:uid(),name:'Holding Pen',type:'Holding pen',length:60,width:80,system:'pipe'},
+            {id:uid(),name:'Sorting Pen',type:'Sorting pen',length:40,width:50,system:'pipeRod'},
+            {id:uid(),name:'Working Alley',type:'Alley',length:40,width:12,system:'panel'}
+          ],
+          gates:[
+            {id:uid(),name:'Main entry',width:14,qty:1,system:'pipe',cost:650,hardware:85}
+          ],
+          planFeatures:[],
+          plan:{gridFt:10,snap:true,sharedDeduction:0},
+          systemConfigs:baseSystemConfigs(),
+          concrete:{holeDiameter:12,holeDepth:3,method:'bags',bagYield:0.6,bagCost:7.25,readyCost:165},
+          equipmentItems:[
+            {id:uid(),name:'Squeeze chute',qty:0,unitCost:0},
+            {id:uid(),name:'Headgate',qty:0,unitCost:0},
+            {id:uid(),name:'Scale',qty:0,unitCost:0}
+          ],
+          labor:{weldingHours:32,weldingRate:65,generalHours:48,generalRate:28,concreteHours:12,concreteRate:32,rentalDays:2,rentalRate:450,freight:350,otherEquipment:0},
+          advanced:{taxPct:8.25,contingencyPct:10,sharedDeduction:0,materialWastePct:7.5},
+          notes:''
+        };
+      }
+
+      let state = makeDefaultState();
+      let currentSystemKey='pipe';
+      let currentPlanTool='select';
+      let selectedFeatureId=null;
+      let drawStart=null;
+      let drawPreview=null;
+      let undoStack=[];
+      let redoStack=[];
+      let lastSavedHash='';
+      let calc={};
+      let sessionTimer=null;
+      let toastTimer=null;
+
+      function stateHash(){
+        const str=JSON.stringify(state);
+        let h=5381;
+        for(let i=0;i<str.length;i++) h=((h<<5)+h)^str.charCodeAt(i);
+        return (h>>>0).toString(16);
+      }
+
+      function setSaveStatus(){
+        const el=$('#saveStatus');
+        if(!el) return;
+        const dirty=lastSavedHash && stateHash()!==lastSavedHash;
+        if(!lastSavedHash){el.textContent='Unsaved';el.className='status unsaved';}
+        else if(dirty){el.textContent='Unsaved changes';el.className='status unsaved';}
+        else{el.textContent='Saved';el.className='status saved';}
+      }
+
+      function toast(message){
+        const el=$('#toast');
+        el.textContent=message;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+      }
+
+      function scheduleSessionSave(){
+        clearTimeout(sessionTimer);
+        sessionTimer=setTimeout(()=>{
+          try{sessionStorage.setItem(SESSION_KEY,JSON.stringify({state,lastSavedHash}));}catch(e){}
+        },120);
+      }
+
+      function markChanged({renderWorkspace=true,renderRows=false}={}){
+        state.project.updatedAt=nowIso();
+        setSaveStatus();
+        scheduleSessionSave();
+        if(renderRows) renderDynamicRows();
+        recalculate(renderWorkspace);
+      }
+
+      function restoreSession(){
+        try{
+          const raw=sessionStorage.getItem(SESSION_KEY);
+          if(!raw) return false;
+          const payload=JSON.parse(raw);
+          if(!payload || !payload.state || typeof payload.state!=='object') return false;
+          state=migrateState(payload.state);
+          lastSavedHash=String(payload.lastSavedHash||'');
+          return true;
+        }catch(e){ return false; }
+      }
+
+      function migrateState(input){
+        const d=makeDefaultState();
+        const s=clone(input||{});
+        const merged={...d,...s};
+        merged.project={...d.project,...(s.project||{})};
+        merged.plan={...d.plan,...(s.plan||{})};
+        merged.concrete={...d.concrete,...(s.concrete||{})};
+        merged.labor={...d.labor,...(s.labor||{})};
+        merged.advanced={...d.advanced,...(s.advanced||{})};
+        merged.systemConfigs=baseSystemConfigs();
+        Object.keys(SYSTEMS).forEach(k=>merged.systemConfigs[k]={...SYSTEMS[k].defaults,...((s.systemConfigs||{})[k]||{})});
+        merged.quickPens=Array.isArray(s.quickPens)?s.quickPens:d.quickPens;
+        merged.gates=Array.isArray(s.gates)?s.gates:d.gates;
+        merged.planFeatures=Array.isArray(s.planFeatures)?s.planFeatures:[];
+        merged.equipmentItems=Array.isArray(s.equipmentItems)?s.equipmentItems:d.equipmentItems;
+        return merged;
+      }
+
+      function buildProjectFile({duplicate=false}={}){
+        if(duplicate){
+          state.project.id=uid();
+          state.project.createdAt=nowIso();
+          state.project.updatedAt=state.project.createdAt;
+          state.project.name=(state.project.name || 'Corral Cost Estimate')+' Copy';
+          $('#projectName').value=state.project.name;
+        } else {
+          state.project.updatedAt=nowIso();
+        }
+        return {
+          raFile:true,
+          formatVersion:TOOL.formatVersion,
+          tool:{id:TOOL.id,name:TOOL.name,version:TOOL.version},
+          project:clone(state.project),
+          preferences:{units:'imperial'},
+          state:clone(state),
+          spatial:{type:'plan-grid',features:clone(state.planFeatures),gridFeet:state.plan.gridFt},
+          metadata:{generator:'RanchAssist',schema:'ra-project'}
+        };
+      }
+
+      function validateProjectFile(project){
+        if(!project || project.raFile!==true) throw new Error('Not a RanchAssist project. Choose a .ra file exported from RanchAssist.');
+        if(!project.tool || !project.tool.id) throw new Error('Project is incomplete. This file is missing its RanchAssist tool identifier.');
+        if(project.tool.id!==TOOL.id) throw new Error('Different RanchAssist tool. This project belongs to '+(project.tool.name||project.tool.id)+'.');
+        if(String(project.formatVersion||'')!=='1.0') throw new Error('Newer or unsupported project format. This project cannot be opened safely in this version.');
+        if(!project.project || !project.project.id || !project.state) throw new Error('Project is incomplete. This file is missing information required to restore the project.');
+        validateProjectState(project.state);
+      }
+
+      function validateProjectState(s){
+        const arrays=['quickPens','gates','planFeatures','equipmentItems'];
+        arrays.forEach(k=>{if(s[k]!=null&&!Array.isArray(s[k])) throw new Error('Project is incomplete. A saved project list has an invalid format.');});
+        if((s.quickPens||[]).length>500 || (s.gates||[]).length>500 || (s.equipmentItems||[]).length>500 || (s.planFeatures||[]).length>5000) throw new Error('Project file is too large to open safely in this version.');
+        const finite=(v,max=10000000)=>{if(v==null||v==='')return;const n=Number(v);if(!Number.isFinite(n)||Math.abs(n)>max)throw new Error('Project contains an invalid numeric value and cannot be opened safely.');};
+        (s.quickPens||[]).forEach(p=>{if(!p||typeof p!=='object')throw new Error('Project contains an invalid pen record.');finite(p.length);finite(p.width);});
+        (s.gates||[]).forEach(g=>{if(!g||typeof g!=='object')throw new Error('Project contains an invalid gate record.');finite(g.width);finite(g.qty,10000);finite(g.cost);finite(g.hardware);});
+        (s.equipmentItems||[]).forEach(x=>{if(!x||typeof x!=='object')throw new Error('Project contains an invalid equipment record.');finite(x.qty,10000);finite(x.unitCost);});
+        const kinds=new Set(['pen','line','gate','equipment','existing']);
+        (s.planFeatures||[]).forEach(f=>{if(!f||typeof f!=='object'||!kinds.has(f.kind))throw new Error('Project contains an unsupported plan feature.');['x','y','w','h','x1','y1','x2','y2','width','cost','hardware'].forEach(k=>finite(f[k]));});
+      }
+
+      function downloadBlob(blob,filename){
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),800);
+      }
+
+      function saveProject(duplicate=false){
+        const payload=buildProjectFile({duplicate});
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/x-ranchassist-project'});
+        downloadBlob(blob,sanitizeFilename(state.project.name)+'.ra');
+        lastSavedHash=stateHash();
+        setSaveStatus();scheduleSessionSave();
+        toast(duplicate?'Project duplicated — new .ra file is ready.':'Project saved — your .ra file is ready.');
+        renderAll();
+      }
+
+      async function openProjectFile(file){
+        try{
+          if(file.size>5*1024*1024) throw new Error('Project file is too large to open safely in this version.');
+          const text=await file.text();
+          const project=JSON.parse(text);
+          validateProjectFile(project);
+          state=migrateState(project.state);
+          state.project={...state.project,...project.project};
+          selectedFeatureId=null;undoStack=[];redoStack=[];
+          lastSavedHash=stateHash();
+          renderAll();scheduleSessionSave();
+          toast('Project opened — your saved RanchAssist project has been restored.');
+        }catch(err){
+          toast(err && err.message ? err.message : 'Project file could not be read.');
+        }finally{
+          $('#projectFileInput').value='';
+        }
+      }
+
+      function clearSession(){
+        try{sessionStorage.removeItem(SESSION_KEY);}catch(e){}
+        state=makeDefaultState();lastSavedHash='';selectedFeatureId=null;undoStack=[];redoStack=[];
+        renderAll();
+        $('#clearDialog').close();
+        toast('Session cleared. Saved .ra files were not affected.');
+      }
+
+      function getSystemOptions(selected){
+        return Object.entries(SYSTEMS).map(([k,v])=>`<option value="${k}" ${k===selected?'selected':''}>${escapeHtml(v.short)}</option>`).join('');
+      }
+
+      function renderDynamicRows(){
+        renderPenRows();renderGateRows();renderEquipmentRows();renderSystemTabs();renderSystemConfig();
+      }
+
+      function renderPenRows(){
+        const wrap=$('#penRows');
+        wrap.innerHTML=state.quickPens.map((p,i)=>`
+          <div class="row-card" data-pen-id="${p.id}">
+            <div class="row-grid">
+              <div><div class="mini-label">Name</div><input data-pen-field="name" value="${escapeHtml(p.name)}" maxlength="80"></div>
+              <div><div class="mini-label">Type</div><select data-pen-field="type">${PEN_TYPES.map(t=>`<option ${t===p.type?'selected':''}>${escapeHtml(t)}</option>`).join('')}</select></div>
+              <div><div class="mini-label">Length (ft)</div><input data-pen-field="length" type="number" min="1" step="1" inputmode="decimal" value="${nonneg(p.length)}"></div>
+              <div><div class="mini-label">Width (ft)</div><input data-pen-field="width" type="number" min="1" step="1" inputmode="decimal" value="${nonneg(p.width)}"></div>
+              <div><div class="mini-label">System</div><select data-pen-field="system">${getSystemOptions(p.system)}</select></div>
+              <div class="remove-wrap"><div class="mini-label">Remove</div><button class="remove" type="button" data-remove-pen="${p.id}" aria-label="Remove ${escapeHtml(p.name)}">×</button></div>
+            </div>
+          </div>`).join('') || '<div class="section-help">No areas yet. Add a pen or facility area to begin.</div>';
+      }
+
+      function renderGateRows(){
+        const wrap=$('#gateRows');
+        wrap.innerHTML=state.gates.map(g=>`
+          <div class="row-card" data-gate-id="${g.id}">
+            <div class="row-grid gates">
+              <div><div class="mini-label">Gate</div><input data-gate-field="name" value="${escapeHtml(g.name)}" maxlength="80"></div>
+              <div><div class="mini-label">Width (ft)</div><input data-gate-field="width" type="number" min="0" step="0.5" inputmode="decimal" value="${nonneg(g.width)}"></div>
+              <div><div class="mini-label">Qty</div><input data-gate-field="qty" type="number" min="0" step="1" inputmode="numeric" value="${nonneg(g.qty)}"></div>
+              <div><div class="mini-label">System</div><select data-gate-field="system">${getSystemOptions(g.system)}</select></div>
+              <div><div class="mini-label">Unit cost</div><input data-gate-field="cost" type="number" min="0" step="0.01" inputmode="decimal" value="${nonneg(g.cost)}"></div>
+              <div><div class="mini-label">Hardware</div><input data-gate-field="hardware" type="number" min="0" step="0.01" inputmode="decimal" value="${nonneg(g.hardware)}"></div>
+              <div class="remove-wrap"><div class="mini-label">Remove</div><button class="remove" type="button" data-remove-gate="${g.id}" aria-label="Remove ${escapeHtml(g.name)}">×</button></div>
+            </div>
+          </div>`).join('') || '<div class="section-help">No gates added.</div>';
+      }
+
+      function renderEquipmentRows(){
+        const wrap=$('#equipmentRows');
+        wrap.innerHTML=state.equipmentItems.map(item=>`
+          <div class="row-card" data-equip-id="${item.id}">
+            <div class="row-grid equip">
+              <div><div class="mini-label">Equipment</div><input list="equipmentTypeList" data-equip-field="name" value="${escapeHtml(item.name)}" maxlength="90"></div>
+              <div><div class="mini-label">Qty</div><input data-equip-field="qty" type="number" min="0" step="1" inputmode="numeric" value="${nonneg(item.qty)}"></div>
+              <div><div class="mini-label">Unit cost</div><input data-equip-field="unitCost" type="number" min="0" step="0.01" inputmode="decimal" value="${nonneg(item.unitCost)}"></div>
+              <div class="remove-wrap"><div class="mini-label">Remove</div><button class="remove" type="button" data-remove-equipment="${item.id}" aria-label="Remove ${escapeHtml(item.name)}">×</button></div>
+            </div>
+          </div>`).join('') + `<datalist id="equipmentTypeList">${EQUIPMENT_TYPES.map(x=>`<option value="${escapeHtml(x)}"></option>`).join('')}</datalist>`;
+        renderDrawEquipmentOptions();
+      }
+
+      function renderSystemTabs(){
+        $('#systemTabs').innerHTML=Object.entries(SYSTEMS).map(([k,v])=>`<button type="button" class="system-tab ${k===currentSystemKey?'active':''}" data-system-tab="${k}">${escapeHtml(v.short)}</button>`).join('');
+      }
+
+      function renderSystemConfig(){
+        const def=SYSTEMS[currentSystemKey];
+        const cfg=state.systemConfigs[currentSystemKey];
+        $('#systemConfig').innerHTML=`<div class="subhead">${escapeHtml(def.label)}</div><div class="field-grid">`+
+          def.fields.map(([key,label,unit,step])=>`<div class="field"><label>${escapeHtml(label)} <span class="assumption">Assumption</span></label><div class="unit-input"><input class="input" data-system-field="${key}" type="number" min="0" step="${step}" inputmode="decimal" value="${nonneg(cfg[key])}"><span class="unit">${escapeHtml(unit)}</span></div></div>`).join('')+
+          `</div>`;
+      }
+
+      function renderDrawSystemOptions(){
+        const html=getSystemOptions($('#drawSystem')?.value || 'pipe');
+        $('#drawSystem').innerHTML=html;$('#selSystem').innerHTML=html;
+      }
+
+      function renderDrawEquipmentOptions(){
+        const names=[...new Set([...state.equipmentItems.map(x=>x.name).filter(Boolean),...EQUIPMENT_TYPES])];
+        const sel=$('#drawEquipment');if(!sel)return;
+        const prev=sel.value;
+        sel.innerHTML=names.map(n=>`<option ${n===prev?'selected':''}>${escapeHtml(n)}</option>`).join('');
+      }
+
+      function syncStaticInputsFromState(){
+        $('#projectName').value=state.project.name || '';
+        $('#gridFt').value=state.plan.gridFt;
+        $('#snapGrid').value=state.plan.snap?'on':'off';
+        $('#planSharedDeduction').value=state.plan.sharedDeduction;
+        $('#holeDiameter').value=state.concrete.holeDiameter;$('#holeDepth').value=state.concrete.holeDepth;$('#concreteMethod').value=state.concrete.method;
+        $('#bagYield').value=state.concrete.bagYield;$('#bagCost').value=state.concrete.bagCost;$('#readyCost').value=state.concrete.readyCost;
+        $('#weldingHours').value=state.labor.weldingHours;$('#weldingRate').value=state.labor.weldingRate;$('#generalHours').value=state.labor.generalHours;$('#generalRate').value=state.labor.generalRate;
+        $('#concreteHours').value=state.labor.concreteHours;$('#concreteRate').value=state.labor.concreteRate;$('#rentalDays').value=state.labor.rentalDays;$('#rentalRate').value=state.labor.rentalRate;
+        $('#freight').value=state.labor.freight;$('#otherEquipment').value=state.labor.otherEquipment;$('#taxPct').value=state.advanced.taxPct;$('#contingencyPct').value=state.advanced.contingencyPct;
+        $('#sharedDeduction').value=state.advanced.sharedDeduction;$('#materialWastePct').value=state.advanced.materialWastePct;$('#notes').value=state.notes || '';
+      }
+
+      function setMode(mode,quiet=false){
+        state.mode=mode==='plan'?'plan':'quick';
+        $('#quickModeBtn').classList.toggle('active',state.mode==='quick');$('#planModeBtn').classList.toggle('active',state.mode==='plan');
+        $('#quickWorkspace').hidden=state.mode!=='quick';$('#planWorkspace').hidden=state.mode!=='plan';
+        $('#quickToolbar').hidden=state.mode!=='quick';$('#quickFacilityControls').hidden=state.mode!=='quick';$('#planFacilityControls').hidden=state.mode!=='plan';$('#quickGateControls').hidden=state.mode!=='quick';
+        $('#workspaceTitle').textContent=state.mode==='quick'?'Facility schematic':'Corral plan';
+        $('#workspaceSub').textContent=state.mode==='quick'?'Add pens and dimensions; RanchAssist will build a proportional planning schematic and calculate perimeter footage.':'Draw to a grid scale. Pens derive perimeter footage; fence lines derive measured length; gates reduce installed fence footage.';
+        if(!quiet) markChanged({renderWorkspace:true}); else recalculate(true);
+      }
+
+      function renderAll(){
+        syncStaticInputsFromState();renderDynamicRows();renderDrawSystemOptions();setMode(state.mode,true);setSaveStatus();renderSelectionPanel();
+      }
+
+      function getGeometryModel(){
+        const systemGross={};const systemTerminals={};Object.keys(SYSTEMS).forEach(k=>{systemGross[k]=0;systemTerminals[k]=0;});
+        let penCount=0;
+        if(state.mode==='quick'){
+          state.quickPens.forEach(p=>{
+            const l=nonneg(p.length),w=nonneg(p.width),sys=SYSTEMS[p.system]?p.system:'custom';
+            const perimeter=2*(l+w);
+            systemGross[sys]+=perimeter;systemTerminals[sys]+=perimeter>0?4:0;penCount++;
+          });
+        }else{
+          state.planFeatures.forEach(f=>{
+            if(f.kind==='pen'){
+              const sys=SYSTEMS[f.system]?f.system:'custom';
+              const ftPerPx=nonneg(state.plan.gridFt)/GRID_PX;
+              const perimeter=2*(Math.abs(num(f.w))*ftPerPx+Math.abs(num(f.h))*ftPerPx);
+              systemGross[sys]+=perimeter;systemTerminals[sys]+=perimeter>0?4:0;penCount++;
+            }else if(f.kind==='line'){
+              const sys=SYSTEMS[f.system]?f.system:'custom';
+              const ftPerPx=nonneg(state.plan.gridFt)/GRID_PX;
+              const len=Math.hypot(num(f.x2)-num(f.x1),num(f.y2)-num(f.y1))*ftPerPx;
+              systemGross[sys]+=len;systemTerminals[sys]+=len>0?2:0;
+            }
+          });
+        }
+        const gross=Object.values(systemGross).reduce((a,b)=>a+b,0);
+        const requestedDeduction=state.mode==='quick'?nonneg(state.advanced.sharedDeduction):nonneg(state.plan.sharedDeduction);
+        const sharedDeduction=Math.min(gross,requestedDeduction);
+        const systemDeduction={};
+        Object.keys(SYSTEMS).forEach(k=>systemDeduction[k]=gross>0?sharedDeduction*(systemGross[k]/gross):0);
+        return {systemGross,systemTerminals,gross,sharedDeduction,systemDeduction,penCount};
+      }
+
+      function getActiveGates(){
+        if(state.mode==='quick') return state.gates.map(g=>({...g,qty:Math.max(0,Math.floor(nonneg(g.qty)))}));
+        return state.planFeatures.filter(f=>f.kind==='gate').map(f=>({
+          id:f.id,name:f.name||'Plan gate',width:nonneg(f.width||12),qty:1,system:SYSTEMS[f.system]?f.system:'custom',cost:nonneg(f.cost||0),hardware:nonneg(f.hardware||0)
+        }));
+      }
+
+      function addBom(bom,category,item,description,quantity,unit,unitCost,precision=0){
+        quantity=nonneg(quantity);unitCost=nonneg(unitCost);
+        if(quantity<=0) return;
+        bom.push({category,item,description,quantity:round(quantity,precision),unit,unitCost:round(unitCost,4),extendedCost:round(quantity*unitCost,2)});
+      }
+
+      function calculate(){
+        const geom=getGeometryModel();
+        const gates=getActiveGates();
+        const gateBySystem={};Object.keys(SYSTEMS).forEach(k=>gateBySystem[k]={opening:0,qty:0,cost:0});
+        gates.forEach(g=>{
+          const sys=SYSTEMS[g.system]?g.system:'custom';const q=Math.max(0,Math.floor(nonneg(g.qty)));
+          gateBySystem[sys].opening+=nonneg(g.width)*q;gateBySystem[sys].qty+=q;gateBySystem[sys].cost+=(nonneg(g.cost)+nonneg(g.hardware))*q;
+        });
+
+        const bom=[];const systemResults={};
+        const waste=1+clamp(state.advanced.materialWastePct,0,100)/100;
+        let constructionSubtotal=0,totalPosts=0,installedLf=0;
+
+        Object.keys(SYSTEMS).forEach(sys=>{
+          const cfg=state.systemConfigs[sys]||SYSTEMS[sys].defaults;
+          const gross=nonneg(geom.systemGross[sys]);
+          const afterShared=Math.max(0,gross-nonneg(geom.systemDeduction[sys]));
+          const gateOpening=Math.min(afterShared,nonneg(gateBySystem[sys].opening));
+          const installed=Math.max(0,afterShared-gateOpening);
+          const baseTerminals=gross>0?Math.max(0,Math.round(nonneg(geom.systemTerminals[sys]))):0;
+          const gatePosts=Math.max(0,Math.round(nonneg(gateBySystem[sys].qty)*2));
+          const spacing=Math.max(0.1,nonneg(cfg.postSpacing)||10);
+          const estimatedIntervals=installed>0?Math.ceil(installed/spacing):0;
+          const linePosts=Math.max(0,estimatedIntervals-baseTerminals);
+          const terminalPosts=baseTerminals+gatePosts;
+          const postCost=nonneg(cfg.linePostCost);const terminalCost=nonneg(cfg.terminalPostCost);
+          let sysCost=0;
+
+          if(installed>0){
+            if(sys==='pipe'){
+              const railFt=installed*Math.max(0,nonneg(cfg.railCount))*waste;
+              addBom(bom,'construction','Steel pipe rail',`${SYSTEMS[sys].label} · ${qtyFmt(cfg.railCount)} rail rows`,railFt,'ft',cfg.railCostPerFt,1);
+            }else if(sys==='pipeRod'){
+              const topFt=installed*Math.max(0,nonneg(cfg.topRailCount))*waste;
+              const rodFt=installed*Math.max(0,nonneg(cfg.rodRows))*waste;
+              addBom(bom,'construction','Top pipe rail',`${SYSTEMS[sys].label} · ${qtyFmt(cfg.topRailCount)} row(s)`,topFt,'ft',cfg.topRailCostPerFt,1);
+              addBom(bom,'construction','Sucker rod',`${qtyFmt(cfg.rodRows)} horizontal row(s)`,rodFt,'ft',cfg.rodCostPerFt,1);
+            }else if(sys==='panel'){
+              const panelLen=Math.max(0.1,nonneg(cfg.panelLength)||16);
+              const panels=Math.ceil(installed*waste/panelLen);
+              addBom(bom,'construction','Livestock panel',`${qtyFmt(panelLen,1)} ft panels`,panels,'ea',cfg.panelCost,0);
+            }else if(sys==='wood'){
+              const railFt=installed*Math.max(0,nonneg(cfg.railCount))*waste;
+              addBom(bom,'construction','Wood rail',`${qtyFmt(cfg.railCount)} horizontal rail rows`,railFt,'ft',cfg.railCostPerFt,1);
+            }else if(sys==='wire'){
+              const wireFt=installed*Math.max(0,nonneg(cfg.strands))*waste;
+              addBom(bom,'construction','Fence wire',`${qtyFmt(cfg.strands)} strand(s)`,wireFt,'ft',cfg.wireCostPerFt,1);
+            }else{
+              const materialFt=installed*waste;
+              addBom(bom,'construction','Custom fence material','User-defined installed-material allowance',materialFt,'ft',cfg.materialCostPerFt,1);
+            }
+          }
+          addBom(bom,'construction',`${SYSTEMS[sys].short} line post`,`${qtyFmt(spacing,1)} ft average spacing`,linePosts,'ea',postCost,0);
+          addBom(bom,'construction',`${SYSTEMS[sys].short} terminal post`,'Corner, end, and gate terminal posts',terminalPosts,'ea',terminalCost,0);
+
+          sysCost=bom.filter(r=>r.category==='construction' && (r.item.startsWith(SYSTEMS[sys].short) ||
+            (sys==='pipe'&&r.item==='Steel pipe rail') || (sys==='pipeRod'&&(r.item==='Top pipe rail'||r.item==='Sucker rod')) ||
+            (sys==='panel'&&r.item==='Livestock panel') || (sys==='wood'&&r.item==='Wood rail') || (sys==='wire'&&r.item==='Fence wire') ||
+            (sys==='custom'&&r.item==='Custom fence material'))).reduce((a,r)=>a+r.extendedCost,0);
+
+          installedLf+=installed;totalPosts+=linePosts+terminalPosts;
+          systemResults[sys]={gross,sharedDeduction:geom.systemDeduction[sys],gateOpening,installed,linePosts,terminalPosts,cost:sysCost};
+        });
+
+        constructionSubtotal=bom.filter(r=>r.category==='construction').reduce((a,r)=>a+r.extendedCost,0);
+
+        let gateSubtotal=0;
+        gates.forEach(g=>{
+          const q=Math.max(0,Math.floor(nonneg(g.qty)));const unit=nonneg(g.cost)+nonneg(g.hardware);gateSubtotal+=unit*q;
+          addBom(bom,'gates',g.name||'Gate',`${qtyFmt(g.width,1)} ft opening · ${SYSTEMS[g.system]?.short||'Custom'} · includes hardware allowance`,q,'ea',unit,0);
+        });
+
+        const dIn=Math.max(0,nonneg(state.concrete.holeDiameter));
+        const depth=Math.max(0,nonneg(state.concrete.holeDepth));
+        const radiusFt=(dIn/12)/2;
+        const concreteFt3=totalPosts*Math.PI*radiusFt*radiusFt*depth;
+        const concreteYd3=concreteFt3/27;
+        const bagYield=Math.max(0.01,nonneg(state.concrete.bagYield)||0.6);
+        const bags=concreteFt3>0?Math.ceil(concreteFt3/bagYield):0;
+        let concreteSubtotal=0;
+        if(state.concrete.method==='ready'){
+          concreteSubtotal=concreteYd3*nonneg(state.concrete.readyCost);
+          addBom(bom,'concrete','Ready-mix concrete',`${qtyFmt(dIn)} in × ${qtyFmt(depth,2)} ft post-hole assumption`,concreteYd3,'yd³',state.concrete.readyCost,2);
+        }else{
+          concreteSubtotal=bags*nonneg(state.concrete.bagCost);
+          addBom(bom,'concrete','Bagged concrete',`${qtyFmt(state.concrete.bagYield,2)} ft³ assumed yield per bag`,bags,'bag',state.concrete.bagCost,0);
+        }
+
+        let workingSubtotal=0;
+        state.equipmentItems.forEach(item=>{
+          const q=Math.max(0,Math.floor(nonneg(item.qty)));const cost=nonneg(item.unitCost);workingSubtotal+=q*cost;
+          addBom(bom,'working',item.name||'Working equipment','User-entered working-equipment allowance',q,'ea',cost,0);
+        });
+
+        const laborSubtotal=nonneg(state.labor.weldingHours)*nonneg(state.labor.weldingRate)+nonneg(state.labor.generalHours)*nonneg(state.labor.generalRate)+nonneg(state.labor.concreteHours)*nonneg(state.labor.concreteRate);
+        const equipmentSubtotal=nonneg(state.labor.rentalDays)*nonneg(state.labor.rentalRate)+nonneg(state.labor.freight)+nonneg(state.labor.otherEquipment);
+        const taxable=constructionSubtotal+gateSubtotal+concreteSubtotal+workingSubtotal;
+        const taxSubtotal=taxable*clamp(state.advanced.taxPct,0,30)/100;
+        const preCont=taxable+laborSubtotal+equipmentSubtotal+taxSubtotal;
+        const contingencySubtotal=preCont*clamp(state.advanced.contingencyPct,0,100)/100;
+        const total=preCont+contingencySubtotal;
+        const gateOpeningTotal=gates.reduce((a,g)=>a+nonneg(g.width)*Math.max(0,Math.floor(nonneg(g.qty))),0);
+        const gateCount=gates.reduce((a,g)=>a+Math.max(0,Math.floor(nonneg(g.qty))),0);
+
+        return {
+          geom,gates,systemResults,bom,waste,totalPosts,installedLf,gateOpeningTotal,gateCount,
+          concreteFt3,concreteYd3,bags,
+          constructionSubtotal,gateSubtotal,concreteSubtotal,workingSubtotal,laborSubtotal,equipmentSubtotal,taxSubtotal,contingencySubtotal,total,
+          materialsSubtotal:taxable,penCount:geom.penCount,
+          costPerFoot:installedLf>0?total/installedLf:0,costPerPen:geom.penCount>0?total/geom.penCount:0
+        };
+      }
+
+      function recalculate(renderWorkspace=true){
+        calc=calculate();
+        renderResults();renderBom();renderFormulas();
+        if(renderWorkspace){ if(state.mode==='quick')renderQuickPreview(); else renderPlan(); }
+      }
+
+      function renderResults(){
+        $('#totalCost').textContent=money(calc.total);$('#totalCostSmall').textContent=money(calc.total);$('#mobileTotal').textContent=money(calc.total);
+        $('#costPerFoot').textContent=`${money2(calc.costPerFoot)} / installed ft`;$('#costPerPen').textContent=`${money(calc.costPerPen)} / pen`;
+        $('#constructionSubtotal').textContent=money(calc.constructionSubtotal);$('#gateSubtotal').textContent=money(calc.gateSubtotal);$('#concreteSubtotal').textContent=money(calc.concreteSubtotal);
+        $('#workingSubtotal').textContent=money(calc.workingSubtotal);$('#laborSubtotal').textContent=money(calc.laborSubtotal);$('#equipmentSubtotal').textContent=money(calc.equipmentSubtotal);
+        $('#taxSubtotal').textContent=money(calc.taxSubtotal);$('#contingencySubtotal').textContent=money(calc.contingencySubtotal);
+        $('#installedLf').textContent=qtyFmt(calc.installedLf,1)+' ft';$('#penCount').textContent=qtyFmt(calc.penCount);$('#gateCount').textContent=qtyFmt(calc.gateCount);$('#concreteBags').textContent=qtyFmt(calc.bags);
+        $('#metricGrossLf').textContent=qtyFmt(calc.geom.gross,1)+' ft';$('#metricGateLf').textContent=qtyFmt(calc.gateOpeningTotal,1)+' ft';$('#metricPosts').textContent=qtyFmt(calc.totalPosts);$('#metricConcrete').textContent=qtyFmt(calc.concreteYd3,2)+' yd³';
+      }
+
+      function renderBom(){
+        const body=$('#bomBody');
+        if(!calc.bom.length){body.innerHTML='<tr><td class="empty-row" colspan="6">Add facility dimensions or draw a plan to build the bill of materials.</td></tr>';return;}
+        body.innerHTML=calc.bom.map(r=>`<tr><td>${escapeHtml(r.item)}</td><td>${escapeHtml(r.description)}</td><td class="num">${qtyFmt(r.quantity,2)}</td><td>${escapeHtml(r.unit)}</td><td class="num">${money2(r.unitCost)}</td><td class="num">${money2(r.extendedCost)}</td></tr>`).join('');
+      }
+
+      function renderFormulas(){
+        const shared=state.mode==='quick'?state.advanced.sharedDeduction:state.plan.sharedDeduction;
+        const formulas=[
+          ['Gross fence footage','Quick mode: sum of 2 × (length + width) for each area. Plan mode: pen perimeters + measured fence-line lengths.'],
+          ['Installed fence footage',`${qtyFmt(calc.geom.gross,1)} ft gross − ${qtyFmt(Math.min(calc.geom.gross,nonneg(shared)),1)} ft shared-boundary deduction − gate openings by construction system = ${qtyFmt(calc.installedLf,1)} ft installed.`],
+          ['Line posts','For each construction system: ceil(installed footage ÷ post spacing) − detected corner/end terminals. Gate terminal posts are added separately.'],
+          ['Concrete volume',`${qtyFmt(calc.totalPosts)} posts × π × (hole radius in feet)² × ${qtyFmt(state.concrete.holeDepth,2)} ft depth = ${qtyFmt(calc.concreteFt3,2)} ft³ (${qtyFmt(calc.concreteYd3,2)} yd³).`],
+          ['Material overage',`Horizontal rails, rods, wire, panels, and custom linear material use a ${qtyFmt(state.advanced.materialWastePct,1)}% user-editable waste/overage factor. Posts are rounded separately.`],
+          ['Tax',`${qtyFmt(state.advanced.taxPct,2)}% × construction materials, gates, concrete, and purchased working equipment = ${money2(calc.taxSubtotal)}.`],
+          ['Contingency',`${qtyFmt(state.advanced.contingencyPct,1)}% × subtotal after tax, labor, rental, and delivery = ${money2(calc.contingencySubtotal)}.`],
+          ['Project total',`Materials + gates + concrete + working equipment + labor + rental/delivery + tax + contingency = ${money2(calc.total)}.`]
+        ];
+        $('#formulaList').innerHTML=formulas.map(([t,c])=>`<div class="formula"><strong>${escapeHtml(t)}</strong><code>${escapeHtml(c)}</code></div>`).join('');
+      }
+
+      function renderQuickPreview(){
+        const host=$('#quickPreview');
+        const pens=state.quickPens;
+        if(!pens.length){host.innerHTML='<div class="preview-empty"><div><strong>No facility areas yet.</strong><br>Add a pen or area to begin the estimate.</div></div>';return;}
+        const vbW=1000,vbH=420,cols=Math.min(3,Math.max(1,pens.length)),gapX=24,gapY=28,margin=28;
+        const rows=Math.ceil(pens.length/cols),cellW=(vbW-margin*2-gapX*(cols-1))/cols,cellH=(vbH-margin*2-gapY*(rows-1))/rows;
+        let shapes='';
+        pens.forEach((p,i)=>{
+          const col=i%cols,row=Math.floor(i/cols);const x=margin+col*(cellW+gapX),y=margin+row*(cellH+gapY);
+          const l=Math.max(1,nonneg(p.length)),w=Math.max(1,nonneg(p.width));
+          const maxDrawW=cellW-24,maxDrawH=cellH-46;const scale=Math.min(maxDrawW/l,maxDrawH/w);
+          const rw=Math.max(50,l*scale),rh=Math.max(42,w*scale);const rx=x+(cellW-rw)/2,ry=y+18+(maxDrawH-rh)/2;
+          shapes+=`<g><rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="4" fill="rgba(76,103,82,.07)" stroke="#171715" stroke-width="2"/>
+            <text x="${x+cellW/2}" y="${y+12}" text-anchor="middle" font-size="13" font-weight="700" fill="#171715">${escapeHtml(p.name||p.type)}</text>
+            <text x="${x+cellW/2}" y="${ry+rh/2}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#666660">${qtyFmt(l,1)} × ${qtyFmt(w,1)} ft</text>
+            <rect x="${x+cellW/2-48}" y="${ry+rh+7}" width="96" height="20" rx="4" fill="#171715"/><text x="${x+cellW/2}" y="${ry+rh+21}" text-anchor="middle" font-size="10" fill="#fff">${escapeHtml(SYSTEMS[p.system]?.short||'Custom')}</text></g>`;
+        });
+        const gateText=state.gates.length?state.gates.map(g=>`${escapeHtml(g.name)} · ${qtyFmt(g.width,1)} ft × ${qtyFmt(g.qty)}`).join('  ·  '):'No gates added';
+        host.innerHTML=`<svg viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg" aria-label="Proportional quick-dimensions schematic">
+          <defs><pattern id="qgrid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#e6e6e0" stroke-width="1"/></pattern></defs>
+          <rect width="1000" height="420" fill="#fbfbf9"/><rect width="1000" height="420" fill="url(#qgrid)"/>${shapes}
+          <rect x="28" y="386" width="944" height="24" rx="5" fill="#fff" stroke="#deded8"/><text x="42" y="402" font-size="11" fill="#666660">GATES · ${gateText}</text></svg>`;
+      }
+
+      function planFtPerPx(){ return Math.max(0.025,nonneg(state.plan.gridFt)/GRID_PX); }
+      function planFeatureLength(f){
+        const ft=planFtPerPx();
+        if(f.kind==='pen'||f.kind==='existing') return {length:Math.abs(num(f.w))*ft,width:Math.abs(num(f.h))*ft,perimeter:2*(Math.abs(num(f.w))+Math.abs(num(f.h)))*ft};
+        if(f.kind==='line') return {length:Math.hypot(num(f.x2)-num(f.x1),num(f.y2)-num(f.y1))*ft,width:0,perimeter:0};
+        return {length:0,width:0,perimeter:0};
+      }
+
+      function svgPoint(evt){
+        const svg=$('#planSvg');const pt=svg.createSVGPoint();pt.x=evt.clientX;pt.y=evt.clientY;
+        const transformed=pt.matrixTransform(svg.getScreenCTM().inverse());
+        return {x:clamp(transformed.x,0,1000),y:clamp(transformed.y,0,640)};
+      }
+      function snapVal(v){ return state.plan.snap?Math.round(v/GRID_PX)*GRID_PX:v; }
+      function snapPoint(p){ return {x:snapVal(p.x),y:snapVal(p.y)}; }
+
+      function pushPlanHistory(){
+        undoStack.push(clone(state.planFeatures));if(undoStack.length>50)undoStack.shift();redoStack=[];
+        updateUndoButtons();
+      }
+      function updateUndoButtons(){
+        $('#undoPlanBtn').disabled=undoStack.length===0;$('#redoPlanBtn').disabled=redoStack.length===0;
+      }
+      function undoPlan(){
+        if(!undoStack.length)return;redoStack.push(clone(state.planFeatures));state.planFeatures=undoStack.pop();selectedFeatureId=null;markChanged({renderWorkspace:true});updateUndoButtons();renderSelectionPanel();
+      }
+      function redoPlan(){
+        if(!redoStack.length)return;undoStack.push(clone(state.planFeatures));state.planFeatures=redoStack.pop();selectedFeatureId=null;markChanged({renderWorkspace:true});updateUndoButtons();renderSelectionPanel();
+      }
+
+      function planGridMarkup(){
+        let s='';
+        for(let x=0;x<=1000;x+=GRID_PX){s+=`<line x1="${x}" y1="0" x2="${x}" y2="640" class="${x%(GRID_PX*5)===0?'plan-grid-major':'plan-grid-line'}"/>`;}
+        for(let y=0;y<=640;y+=GRID_PX){s+=`<line x1="0" y1="${y}" x2="1000" y2="${y}" class="${y%(GRID_PX*5)===0?'plan-grid-major':'plan-grid-line'}"/>`;}
+        return s;
+      }
+
+      function renderPlan(){
+        const svg=$('#planSvg');if(!svg)return;
+        let markup=`<rect width="1000" height="640" fill="#fbfbf9"/>${planGridMarkup()}`;
+        state.planFeatures.forEach(f=>{
+          const selected=f.id===selectedFeatureId?' plan-selected':'';
+          if(f.kind==='pen'){
+            const x=Math.min(f.x,f.x+f.w),y=Math.min(f.y,f.y+f.h),w=Math.abs(f.w),h=Math.abs(f.h);const d=planFeatureLength(f);
+            markup+=`<g data-feature-id="${f.id}"><rect data-feature-id="${f.id}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3" class="plan-pen${selected}"/>
+              <text x="${x+w/2}" y="${y+h/2-8}" text-anchor="middle" class="plan-label">${escapeHtml(f.name||'Pen')}</text>
+              <text x="${x+w/2}" y="${y+h/2+12}" text-anchor="middle" font-size="12" fill="#666660" pointer-events="none">${qtyFmt(d.length,1)} × ${qtyFmt(d.width,1)} ft</text></g>`;
+          }else if(f.kind==='line'){
+            const d=planFeatureLength(f),mx=(f.x1+f.x2)/2,my=(f.y1+f.y2)/2;
+            markup+=`<g data-feature-id="${f.id}"><line data-feature-id="${f.id}" x1="${f.x1}" y1="${f.y1}" x2="${f.x2}" y2="${f.y2}" class="plan-line${selected}"/><rect x="${mx-28}" y="${my-25}" width="56" height="20" class="plan-measure-bg"/><text x="${mx}" y="${my-11}" text-anchor="middle" class="plan-measure">${qtyFmt(d.length,1)} ft</text></g>`;
+          }else if(f.kind==='gate'){
+            markup+=`<g data-feature-id="${f.id}" transform="translate(${f.x} ${f.y})"><circle data-feature-id="${f.id}" r="13" class="plan-gate${selected}"/><path d="M-7 7L7-7" stroke="#171715" stroke-width="2"/><text x="0" y="-20" text-anchor="middle" class="plan-label">${escapeHtml(f.name||'Gate')}</text></g>`;
+          }else if(f.kind==='equipment'){
+            markup+=`<g data-feature-id="${f.id}" transform="translate(${f.x} ${f.y})"><rect data-feature-id="${f.id}" x="-11" y="-11" width="22" height="22" rx="3" class="plan-equipment${selected}"/><text x="0" y="-18" text-anchor="middle" class="plan-label">${escapeHtml(f.name||'Equipment')}</text></g>`;
+          }else if(f.kind==='existing'){
+            const x=Math.min(f.x,f.x+f.w),y=Math.min(f.y,f.y+f.h),w=Math.abs(f.w),h=Math.abs(f.h);
+            markup+=`<g data-feature-id="${f.id}"><rect data-feature-id="${f.id}" x="${x}" y="${y}" width="${w}" height="${h}" rx="3" class="plan-existing${selected}"/><text x="${x+w/2}" y="${y+h/2}" text-anchor="middle" class="plan-label">${escapeHtml(f.name||'Existing')}</text></g>`;
+          }
+        });
+        if(drawPreview){
+          if(drawPreview.kind==='pen'||drawPreview.kind==='existing'){
+            const x=Math.min(drawPreview.x,drawPreview.x+drawPreview.w),y=Math.min(drawPreview.y,drawPreview.y+drawPreview.h);
+            markup+=`<rect x="${x}" y="${y}" width="${Math.abs(drawPreview.w)}" height="${Math.abs(drawPreview.h)}" fill="rgba(76,103,82,.05)" stroke="#4C6752" stroke-width="2" stroke-dasharray="7 5"/>`;
+          }else if(drawPreview.kind==='line'){
+            markup+=`<line x1="${drawPreview.x1}" y1="${drawPreview.y1}" x2="${drawPreview.x2}" y2="${drawPreview.y2}" stroke="#4C6752" stroke-width="3" stroke-dasharray="7 5"/>`;
+          }
+        }
+        svg.innerHTML=markup;
+        updateUndoButtons();renderSelectionPanel();
+      }
+
+      function setPlanTool(tool){
+        currentPlanTool=tool;
+        $$('[data-plan-tool]').forEach(b=>b.classList.toggle('active',b.dataset.planTool===tool));
+        $('#planSvg').style.cursor=tool==='select'?'default':'crosshair';
+      }
+
+      function beginPlanPointer(evt){
+        if(state.mode!=='plan')return;
+        const hit=evt.target.closest('[data-feature-id]');
+        if(currentPlanTool==='select'){
+          selectedFeatureId=hit?hit.getAttribute('data-feature-id'):null;renderPlan();return;
+        }
+        const p=snapPoint(svgPoint(evt));
+        if(currentPlanTool==='gate'){
+          pushPlanHistory();state.planFeatures.push({id:uid(),kind:'gate',x:p.x,y:p.y,name:'Gate',width:12,system:$('#drawSystem').value||'pipe',cost:650,hardware:85});
+          selectedFeatureId=state.planFeatures[state.planFeatures.length-1].id;markChanged({renderWorkspace:true});return;
+        }
+        if(currentPlanTool==='equipment'){
+          pushPlanHistory();state.planFeatures.push({id:uid(),kind:'equipment',x:p.x,y:p.y,name:$('#drawEquipment').value||'Working equipment'});
+          selectedFeatureId=state.planFeatures[state.planFeatures.length-1].id;markChanged({renderWorkspace:true});return;
+        }
+        drawStart=p;
+        if(currentPlanTool==='pen')drawPreview={kind:'pen',x:p.x,y:p.y,w:0,h:0};
+        if(currentPlanTool==='existing')drawPreview={kind:'existing',x:p.x,y:p.y,w:0,h:0};
+        if(currentPlanTool==='line')drawPreview={kind:'line',x1:p.x,y1:p.y,x2:p.x,y2:p.y};
+        evt.currentTarget.setPointerCapture?.(evt.pointerId);renderPlan();
+      }
+
+      function movePlanPointer(evt){
+        if(!drawStart||!drawPreview)return;const p=snapPoint(svgPoint(evt));
+        if(drawPreview.kind==='pen'||drawPreview.kind==='existing'){drawPreview.w=p.x-drawStart.x;drawPreview.h=p.y-drawStart.y;}
+        else{drawPreview.x2=p.x;drawPreview.y2=p.y;}
+        renderPlan();
+      }
+
+      function endPlanPointer(evt){
+        if(!drawStart||!drawPreview)return;const p=snapPoint(svgPoint(evt));
+        if(drawPreview.kind==='pen'||drawPreview.kind==='existing'){drawPreview.w=p.x-drawStart.x;drawPreview.h=p.y-drawStart.y;}
+        else{drawPreview.x2=p.x;drawPreview.y2=p.y;}
+        const preview=clone(drawPreview);drawStart=null;drawPreview=null;
+        let valid=false;
+        if(preview.kind==='pen'||preview.kind==='existing')valid=Math.abs(preview.w)>=10&&Math.abs(preview.h)>=10;
+        else valid=Math.hypot(preview.x2-preview.x1,preview.y2-preview.y1)>=10;
+        if(valid){
+          pushPlanHistory();
+          if(preview.kind==='pen')Object.assign(preview,{id:uid(),name:'Pen '+(state.planFeatures.filter(f=>f.kind==='pen').length+1),system:$('#drawSystem').value||'pipe'});
+          else if(preview.kind==='line')Object.assign(preview,{id:uid(),name:'Fence line '+(state.planFeatures.filter(f=>f.kind==='line').length+1),system:$('#drawSystem').value||'pipe'});
+          else Object.assign(preview,{id:uid(),name:'Existing structure'});
+          state.planFeatures.push(preview);selectedFeatureId=preview.id;markChanged({renderWorkspace:true});
+        }else renderPlan();
+      }
+
+      function renderSelectionPanel(){
+        const panel=$('#selectionPanel');const f=state.planFeatures.find(x=>x.id===selectedFeatureId);
+        if(state.mode!=='plan'||!f){panel.hidden=true;return;}
+        panel.hidden=false;$('#selName').value=f.name||'';
+        const sysLabel=$('#selSystemLabel'),lenLabel=$('#selLengthLabel'),widLabel=$('#selWidthLabel'),costLabel=$('#selCostLabel'),hwLabel=$('#selHardwareLabel');
+        [sysLabel,lenLabel,widLabel,costLabel,hwLabel].forEach(x=>x.hidden=true);
+        if(f.kind==='pen'||f.kind==='line'||f.kind==='gate'){
+          sysLabel.hidden=false;$('#selSystem').value=f.system||'pipe';
+        }
+        const d=planFeatureLength(f);
+        if(f.kind==='pen'){
+          lenLabel.hidden=false;widLabel.hidden=false;lenLabel.firstChild.textContent='Length (ft)';widLabel.firstChild.textContent='Width (ft)';$('#selLength').value=round(d.length,1);$('#selWidth').value=round(d.width,1);
+        }else if(f.kind==='line'){
+          lenLabel.hidden=false;lenLabel.firstChild.textContent='Length (ft)';$('#selLength').value=round(d.length,1);
+        }else if(f.kind==='gate'){
+          lenLabel.hidden=false;lenLabel.firstChild.textContent='Gate width (ft)';$('#selLength').value=nonneg(f.width||12);costLabel.hidden=false;hwLabel.hidden=false;$('#selCost').value=nonneg(f.cost);$('#selHardware').value=nonneg(f.hardware);
+        }
+      }
+
+      function updateSelectedFeature(field,value){
+        const f=state.planFeatures.find(x=>x.id===selectedFeatureId);if(!f)return;
+        pushPlanHistory();
+        if(field==='name')f.name=String(value||'').slice(0,80);
+        if(field==='system'&&SYSTEMS[value])f.system=value;
+        if(field==='cost')f.cost=nonneg(value);
+        if(field==='hardware')f.hardware=nonneg(value);
+        if(field==='length'){
+          const target=nonneg(value),ft=planFtPerPx();
+          if(f.kind==='pen')f.w=(f.w<0?-1:1)*(target/ft);
+          else if(f.kind==='line'){
+            const dx=f.x2-f.x1,dy=f.y2-f.y1,old=Math.hypot(dx,dy)||1,px=target/ft;f.x2=f.x1+dx/old*px;f.y2=f.y1+dy/old*px;
+          }else if(f.kind==='gate')f.width=target;
+        }
+        if(field==='width'&&f.kind==='pen'){const ft=planFtPerPx();f.h=(f.h<0?-1:1)*(nonneg(value)/ft);}
+        markChanged({renderWorkspace:true});
+      }
+
+      function deleteSelected(){
+        if(!selectedFeatureId)return;const idx=state.planFeatures.findIndex(f=>f.id===selectedFeatureId);if(idx<0)return;
+        pushPlanHistory();state.planFeatures.splice(idx,1);selectedFeatureId=null;markChanged({renderWorkspace:true});
+      }
+
+      function summaryText(){
+        const systems=Object.entries(calc.systemResults||{}).filter(([,v])=>v.gross>0).map(([k,v])=>`- ${SYSTEMS[k].label}: ${qtyFmt(v.installed,1)} installed ft, ${qtyFmt(v.linePosts+v.terminalPosts)} posts`).join('\n');
+        return [
+          'RanchAssist™ Corral Cost Estimator',
+          state.project.name || 'Corral Cost Estimate',
+          '',
+          `Estimated total: ${money2(calc.total)}`,
+          `Installed fence: ${qtyFmt(calc.installedLf,1)} ft`,
+          `Pens/areas: ${qtyFmt(calc.penCount)}`,
+          `Gates: ${qtyFmt(calc.gateCount)} (${qtyFmt(calc.gateOpeningTotal,1)} ft openings)`,
+          `Posts: ${qtyFmt(calc.totalPosts)}`,
+          `Concrete: ${qtyFmt(calc.concreteYd3,2)} yd³ / ${qtyFmt(calc.bags)} bag equivalent`,
+          '',
+          'Cost breakdown',
+          `- Construction materials: ${money2(calc.constructionSubtotal)}`,
+          `- Gates + hardware: ${money2(calc.gateSubtotal)}`,
+          `- Concrete: ${money2(calc.concreteSubtotal)}`,
+          `- Working equipment: ${money2(calc.workingSubtotal)}`,
+          `- Labor: ${money2(calc.laborSubtotal)}`,
+          `- Rental + delivery: ${money2(calc.equipmentSubtotal)}`,
+          `- Tax: ${money2(calc.taxSubtotal)}`,
+          `- Contingency: ${money2(calc.contingencySubtotal)}`,
+          '',
+          systems ? 'Construction systems\n'+systems : '',
+          state.notes ? '\nNotes\n'+state.notes : '',
+          '',
+          'Planning estimate only. Verify dimensions, material specifications, supplier pricing, site conditions, and construction requirements before purchase or installation.',
+          `Generated ${new Date().toLocaleString()}`
+        ].filter(Boolean).join('\n');
+      }
+
+      function exportCsv(){
+        const rows=[['Item','Description','Quantity','Unit','Unit Cost','Extended Cost']];
+        calc.bom.forEach(r=>rows.push([r.item,r.description,r.quantity,r.unit,r.unitCost,r.extendedCost]));
+        rows.push([]);rows.push(['COST SUMMARY','','','','','']);
+        rows.push(['Construction materials','','','','',round(calc.constructionSubtotal,2)]);
+        rows.push(['Gates + hardware','','','','',round(calc.gateSubtotal,2)]);
+        rows.push(['Concrete','','','','',round(calc.concreteSubtotal,2)]);
+        rows.push(['Working equipment','','','','',round(calc.workingSubtotal,2)]);
+        rows.push(['Labor','','','','',round(calc.laborSubtotal,2)]);
+        rows.push(['Rental + delivery','','','','',round(calc.equipmentSubtotal,2)]);
+        rows.push(['Tax','','','','',round(calc.taxSubtotal,2)]);
+        rows.push(['Contingency','','','','',round(calc.contingencySubtotal,2)]);
+        rows.push(['Estimated Total','','','','',round(calc.total,2)]);
+        const csv=rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+        downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),sanitizeFilename(state.project.name)+'_BOM.csv');
+        toast('CSV bill of materials exported.');
+      }
+
+      function serializeSvgForExport(svg){
+        const cloneSvg=svg.cloneNode(true);cloneSvg.setAttribute('xmlns',svgNS);cloneSvg.setAttribute('width','1400');cloneSvg.setAttribute('height','896');
+        const style=document.createElementNS(svgNS,'style');
+        style.textContent=`
+          .plan-grid-line{stroke:#e9e9e4;stroke-width:1}.plan-grid-major{stroke:#dcdcd5;stroke-width:1}.plan-pen{fill:rgba(76,103,82,.08);stroke:#171715;stroke-width:2}
+          .plan-line{stroke:#171715;stroke-width:3;stroke-linecap:round}.plan-selected{stroke:#4C6752!important;stroke-width:4!important}.plan-label{font-family:Arial,sans-serif;font-size:14px;font-weight:700;fill:#171715}
+          .plan-measure{font-family:Arial,sans-serif;font-size:12px;font-weight:700;fill:#fff}.plan-measure-bg{fill:#171715}.plan-gate{fill:#fff;stroke:#171715;stroke-width:2}.plan-equipment{fill:#171715}.plan-existing{fill:#efefe9;stroke:#81817A;stroke-width:1.5;stroke-dasharray:5 4}`;
+        cloneSvg.insertBefore(style,cloneSvg.firstChild);
+        return new XMLSerializer().serializeToString(cloneSvg);
+      }
+
+      function exportPng(){
+        const source=state.mode==='plan'?$('#planSvg'):$('#quickPreview svg');
+        if(!source){toast('Add a facility area or plan feature before exporting a PNG.');return;}
+        const markup=serializeSvgForExport(source);const blob=new Blob([markup],{type:'image/svg+xml;charset=utf-8'});const url=URL.createObjectURL(blob);const img=new Image();
+        img.onload=()=>{
+          const canvas=document.createElement('canvas');canvas.width=1600;canvas.height=1024;const ctx=canvas.getContext('2d');ctx.fillStyle='#fbfbf9';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          URL.revokeObjectURL(url);canvas.toBlob(png=>{if(png){downloadBlob(png,sanitizeFilename(state.project.name)+'_Plan.png');toast('Plan PNG exported.');}},'image/png');
+        };
+        img.onerror=()=>{URL.revokeObjectURL(url);toast('PNG export could not be created in this browser.');};img.src=url;
+      }
+
+      async function copySummary(){
+        const text=summaryText();
+        try{await navigator.clipboard.writeText(text);toast('Estimate summary copied.');}
+        catch(e){
+          const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('Estimate summary copied.');
+        }
+      }
+
+      function openEmailDialog(){
+        $('#emailError').textContent='';$('#emailDialog').showModal();setTimeout(()=>$('#emailTo').focus(),50);
+      }
+
+      function sendEmail(){
+        const to=$('#emailTo').value.trim();const err=$('#emailError');err.textContent='';
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){err.textContent='Enter a valid email address.';return;}
+        const btn=$('#sendEmailBtn');btn.disabled=true;btn.textContent='Sending…';
+        const payload={to,projectName:state.project.name,summary:summaryText(),totals:{total:calc.total,materials:calc.materialsSubtotal,labor:calc.laborSubtotal,equipment:calc.equipmentSubtotal},bom:calc.bom};
+        if(typeof google!=='undefined' && google.script && google.script.run){
+          google.script.run.withSuccessHandler(()=>{btn.disabled=false;btn.textContent='Send Estimate';$('#emailDialog').close();toast('Estimate emailed.');})
+            .withFailureHandler(e=>{btn.disabled=false;btn.textContent='Send Estimate';err.textContent=e&&e.message?e.message:'Email could not be sent.';})
+            .sendCorralEstimateEmail(payload);
+        }else{
+          btn.disabled=false;btn.textContent='Send Estimate';
+          const subject=encodeURIComponent('RanchAssist Corral Cost Estimate — '+state.project.name);const body=encodeURIComponent(summaryText());
+          window.location.href=`mailto:${encodeURIComponent(to)}?subject=${subject}&body=${body}`;$('#emailDialog').close();toast('Opened your email app with the estimate summary.');
+        }
+      }
+
+      function closeMenus(){ $$('details.menu[open]').forEach(d=>d.removeAttribute('open')); }
+
+      function addPen(){
+        state.quickPens.push({id:uid(),name:'New Pen',type:'Holding pen',length:40,width:40,system:'pipe'});markChanged({renderRows:true});
+      }
+      function addGate(){
+        state.gates.push({id:uid(),name:'Gate',width:12,qty:1,system:'pipe',cost:500,hardware:75});markChanged({renderRows:true});
+      }
+      function addEquipment(){
+        state.equipmentItems.push({id:uid(),name:'Custom',qty:1,unitCost:0});markChanged({renderRows:true});
+      }
+
+      function handleAction(action){
+        closeMenus();
+        switch(action){
+          case 'open-project': $('#projectFileInput').click(); break;
+          case 'save-project': saveProject(false); break;
+          case 'duplicate-project': saveProject(true); break;
+          case 'clear-session': $('#clearDialog').showModal(); break;
+          case 'close-clear': $('#clearDialog').close(); break;
+          case 'confirm-clear': clearSession(); break;
+          case 'export-csv': exportCsv(); break;
+          case 'export-png': exportPng(); break;
+          case 'print': window.print(); break;
+          case 'copy-summary': copySummary(); break;
+          case 'email': openEmailDialog(); break;
+          case 'close-email': $('#emailDialog').close(); break;
+          case 'send-email': sendEmail(); break;
+          case 'add-pen': addPen(); break;
+          case 'add-gate': addGate(); break;
+          case 'add-equipment': addEquipment(); break;
+          case 'undo-plan': undoPlan(); break;
+          case 'redo-plan': redoPlan(); break;
+          case 'delete-selected': deleteSelected(); break;
+          case 'jump-results': $('#resultsCard').scrollIntoView({behavior:'smooth',block:'start'}); break;
+        }
+      }
+
+      function bindEvents(){
+        document.addEventListener('click',e=>{
+          const actionEl=e.target.closest('[data-action]');if(actionEl){e.preventDefault();handleAction(actionEl.dataset.action);return;}
+          const modeEl=e.target.closest('[data-mode]');if(modeEl){e.preventDefault();setMode(modeEl.dataset.mode);return;}
+          const planTool=e.target.closest('[data-plan-tool]');if(planTool){e.preventDefault();setPlanTool(planTool.dataset.planTool);return;}
+          const sysTab=e.target.closest('[data-system-tab]');if(sysTab){e.preventDefault();currentSystemKey=sysTab.dataset.systemTab;renderSystemTabs();renderSystemConfig();return;}
+          const rmPen=e.target.closest('[data-remove-pen]');if(rmPen){e.preventDefault();state.quickPens=state.quickPens.filter(x=>x.id!==rmPen.dataset.removePen);markChanged({renderRows:true});return;}
+          const rmGate=e.target.closest('[data-remove-gate]');if(rmGate){e.preventDefault();state.gates=state.gates.filter(x=>x.id!==rmGate.dataset.removeGate);markChanged({renderRows:true});return;}
+          const rmEquip=e.target.closest('[data-remove-equipment]');if(rmEquip){e.preventDefault();state.equipmentItems=state.equipmentItems.filter(x=>x.id!==rmEquip.dataset.removeEquipment);markChanged({renderRows:true});return;}
+        });
+
+        $('#projectFileInput').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(f)openProjectFile(f);});
+        $('#projectName').addEventListener('input',e=>{state.project.name=e.target.value.slice(0,120);markChanged({renderWorkspace:false});});
+
+        $('#penRows').addEventListener('input',e=>{
+          const field=e.target.dataset.penField;if(!field)return;const card=e.target.closest('[data-pen-id]');const p=state.quickPens.find(x=>x.id===card.dataset.penId);if(!p)return;
+          p[field]=['length','width'].includes(field)?nonneg(e.target.value):e.target.value;markChanged({renderWorkspace:true});
+        });
+        $('#penRows').addEventListener('change',e=>{
+          const field=e.target.dataset.penField;if(!field)return;const card=e.target.closest('[data-pen-id]');const p=state.quickPens.find(x=>x.id===card.dataset.penId);if(!p)return;
+          p[field]=['length','width'].includes(field)?nonneg(e.target.value):e.target.value;markChanged({renderWorkspace:true});
+        });
+
+        $('#gateRows').addEventListener('input',e=>{
+          const field=e.target.dataset.gateField;if(!field)return;const card=e.target.closest('[data-gate-id]');const g=state.gates.find(x=>x.id===card.dataset.gateId);if(!g)return;
+          g[field]=['width','qty','cost','hardware'].includes(field)?nonneg(e.target.value):e.target.value;markChanged({renderWorkspace:true});
+        });
+        $('#gateRows').addEventListener('change',e=>{
+          const field=e.target.dataset.gateField;if(!field)return;const card=e.target.closest('[data-gate-id]');const g=state.gates.find(x=>x.id===card.dataset.gateId);if(!g)return;
+          g[field]=['width','qty','cost','hardware'].includes(field)?nonneg(e.target.value):e.target.value;markChanged({renderWorkspace:true});
+        });
+
+        $('#equipmentRows').addEventListener('input',e=>{
+          const field=e.target.dataset.equipField;if(!field)return;const card=e.target.closest('[data-equip-id]');const item=state.equipmentItems.find(x=>x.id===card.dataset.equipId);if(!item)return;
+          item[field]=['qty','unitCost'].includes(field)?nonneg(e.target.value):e.target.value;markChanged({renderWorkspace:false});
+        });
+        $('#equipmentRows').addEventListener('change',()=>renderDrawEquipmentOptions());
+
+        $('#systemConfig').addEventListener('input',e=>{
+          const key=e.target.dataset.systemField;if(!key)return;state.systemConfigs[currentSystemKey][key]=nonneg(e.target.value);markChanged({renderWorkspace:false});
+        });
+
+        const bindNum=(id,group,key,renderWorkspace=false)=>{$('#'+id).addEventListener('input',e=>{state[group][key]=nonneg(e.target.value);markChanged({renderWorkspace});});};
+        bindNum('holeDiameter','concrete','holeDiameter');bindNum('holeDepth','concrete','holeDepth');bindNum('bagYield','concrete','bagYield');bindNum('bagCost','concrete','bagCost');bindNum('readyCost','concrete','readyCost');
+        $('#concreteMethod').addEventListener('change',e=>{state.concrete.method=e.target.value;markChanged({renderWorkspace:false});});
+        bindNum('weldingHours','labor','weldingHours');bindNum('weldingRate','labor','weldingRate');bindNum('generalHours','labor','generalHours');bindNum('generalRate','labor','generalRate');
+        bindNum('concreteHours','labor','concreteHours');bindNum('concreteRate','labor','concreteRate');bindNum('rentalDays','labor','rentalDays');bindNum('rentalRate','labor','rentalRate');bindNum('freight','labor','freight');bindNum('otherEquipment','labor','otherEquipment');
+        bindNum('taxPct','advanced','taxPct');bindNum('contingencyPct','advanced','contingencyPct');bindNum('sharedDeduction','advanced','sharedDeduction',true);bindNum('materialWastePct','advanced','materialWastePct');
+        $('#notes').addEventListener('input',e=>{state.notes=e.target.value;markChanged({renderWorkspace:false});});
+
+        $('#gridFt').addEventListener('input',e=>{state.plan.gridFt=Math.max(1,nonneg(e.target.value)||1);markChanged({renderWorkspace:true});});
+        $('#snapGrid').addEventListener('change',e=>{state.plan.snap=e.target.value==='on';markChanged({renderWorkspace:false});});
+        $('#planSharedDeduction').addEventListener('input',e=>{state.plan.sharedDeduction=nonneg(e.target.value);markChanged({renderWorkspace:true});});
+
+        $('#planSvg').addEventListener('pointerdown',beginPlanPointer);$('#planSvg').addEventListener('pointermove',movePlanPointer);$('#planSvg').addEventListener('pointerup',endPlanPointer);$('#planSvg').addEventListener('pointercancel',()=>{drawStart=null;drawPreview=null;renderPlan();});
+
+        $('#selName').addEventListener('change',e=>updateSelectedFeature('name',e.target.value));
+        $('#selSystem').addEventListener('change',e=>updateSelectedFeature('system',e.target.value));
+        $('#selLength').addEventListener('change',e=>updateSelectedFeature('length',e.target.value));
+        $('#selWidth').addEventListener('change',e=>updateSelectedFeature('width',e.target.value));
+        $('#selCost').addEventListener('change',e=>updateSelectedFeature('cost',e.target.value));
+        $('#selHardware').addEventListener('change',e=>updateSelectedFeature('hardware',e.target.value));
+
+        window.addEventListener('keydown',e=>{
+          if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveProject(false);}
+          if(state.mode==='plan' && (e.key==='Delete'||e.key==='Backspace') && selectedFeatureId && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();deleteSelected();}
+          if(state.mode==='plan' && (e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redoPlan():undoPlan();}
+        });
+
+        window.addEventListener('beforeunload',e=>{
+          const dirty=!lastSavedHash || stateHash()!==lastSavedHash;
+          const hasWork=state.quickPens.length||state.planFeatures.length||state.gates.length;
+          if(dirty&&hasWork){e.preventDefault();e.returnValue='';}
+        });
+      }
+
+      restoreSession();
+      bindEvents();
+      renderAll();
+      setPlanTool('select');
+    })();
+  </script>
+</body>
+</html>
